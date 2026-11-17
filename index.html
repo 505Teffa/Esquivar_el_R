@@ -1,0 +1,2999 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <meta
+    name="theme-color"
+    content="#efe7d5"
+  />
+  <meta
+    name="description"
+    content="Esquivar el R — intervención digital situada sobre movilidad cotidiana en la Entrada Rafael Azula de la UPTC."
+  />
+  <title>Esquivar el R — versión sketch expandida</title>
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  />
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Permanent+Marker&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    :root {
+      --ink: #151515;
+      --ink-soft: #2d2b28;
+      --paper: #efe7d5;
+      --paper-2: #e3dbc9;
+      --paper-3: #f7f1e5;
+      --paper-4: #d8cfbd;
+      --yellow: #f7c700;
+      --yellow-soft: #ffe16a;
+      --blue: #b8c8d6;
+      --blue-2: #98aebb;
+      --red: #d84232;
+      --red-soft: #e4776b;
+      --gray: #766f64;
+      --gray-2: #a29a8d;
+      --green: #6d9c79;
+      --green-soft: #a4c7aa;
+      --shadow: rgba(0, 0, 0, 0.18);
+      --shadow-soft: rgba(0, 0, 0, 0.08);
+      --scribble: rgba(21, 21, 21, 0.13);
+      --marker: "Permanent Marker", system-ui, sans-serif;
+      --hand: "Caveat", "Comic Sans MS", cursive;
+      --ui-gap: 10px;
+      --safe-bottom: max(18px, env(safe-area-inset-bottom));
+      --safe-top: max(10px, env(safe-area-inset-top));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      margin: 0;
+      min-height: 100%;
+      background: #111111;
+      color: var(--ink);
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background: #111111;
+      color: var(--ink);
+      overflow-x: hidden;
+      font-family: var(--hand);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .screen {
+      width: 100%;
+      min-height: 100svh;
+    }
+
+    .marker {
+      font-family: var(--marker);
+    }
+
+    .hand {
+      font-family: var(--hand);
+    }
+
+    .paper-bg {
+      background:
+        linear-gradient(
+          rgba(255, 255, 255, 0.2),
+          rgba(255, 255, 255, 0.2)
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0 25px,
+          rgba(35, 35, 35, 0.05) 25px 26px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          transparent 0 25px,
+          rgba(35, 35, 35, 0.035) 25px 26px
+        ),
+        var(--paper);
+    }
+
+    .paper-noise {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0.17;
+      mix-blend-mode: multiply;
+      background-image:
+        radial-gradient(
+          circle at 10% 20%,
+          rgba(0, 0, 0, 0.18) 0 0.6px,
+          transparent 0.8px
+        ),
+        radial-gradient(
+          circle at 70% 45%,
+          rgba(0, 0, 0, 0.12) 0 0.5px,
+          transparent 0.7px
+        ),
+        radial-gradient(
+          circle at 30% 80%,
+          rgba(0, 0, 0, 0.1) 0 0.5px,
+          transparent 0.7px
+        );
+      background-size:
+        11px 11px,
+        17px 17px,
+        13px 13px;
+    }
+
+    .sketch-box {
+      position: relative;
+      background: rgba(247, 241, 229, 0.93);
+      border: 3px solid var(--ink);
+      box-shadow:
+        6px 7px 0 rgba(21, 21, 21, 0.16);
+    }
+
+    .sketch-box::before {
+      content: "";
+      position: absolute;
+      inset: 4px -5px -4px 5px;
+      border: 1px solid rgba(21, 21, 21, 0.42);
+      transform: rotate(0.45deg);
+      pointer-events: none;
+    }
+
+    .sketch-box::after {
+      content: "";
+      position: absolute;
+      inset: -4px 5px 5px -4px;
+      border: 1px solid rgba(21, 21, 21, 0.42);
+      transform: rotate(-0.35deg);
+      pointer-events: none;
+    }
+
+    .highlight {
+      position: relative;
+      z-index: 0;
+      display: inline-block;
+    }
+
+    .highlight::before {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      left: -6px;
+      right: -6px;
+      bottom: 0.08em;
+      height: 0.56em;
+      background: var(--yellow);
+      transform: rotate(-1.3deg);
+      clip-path: polygon(
+        0 12%,
+        100% 0,
+        97% 100%,
+        2% 88%
+      );
+    }
+
+    .tape {
+      position: absolute;
+      width: 58px;
+      height: 17px;
+      background: rgba(247, 231, 174, 0.8);
+      border: 1px solid rgba(60, 55, 45, 0.18);
+      mix-blend-mode: multiply;
+      transform: rotate(-8deg);
+      pointer-events: none;
+    }
+
+    .tape.tl {
+      top: -8px;
+      left: 18px;
+    }
+
+    .tape.tr {
+      top: -8px;
+      right: 18px;
+      transform: rotate(7deg);
+    }
+
+    .tape.bl {
+      bottom: -8px;
+      left: 20px;
+      transform: rotate(5deg);
+    }
+
+    .tape.br {
+      bottom: -8px;
+      right: 20px;
+      transform: rotate(-6deg);
+    }
+
+    .intro-screen {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .intro-wrap {
+      position: relative;
+      z-index: 2;
+      width: min(1160px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    .title-zone {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 6px;
+      color: var(--gray);
+      font-family: var(--hand);
+      font-size: 1.15rem;
+      letter-spacing: 0.03em;
+      transform: rotate(-1deg);
+    }
+
+    .main-title {
+      margin: 0;
+      font-family: var(--marker);
+      font-size: clamp(4.2rem, 11vw, 9rem);
+      line-height: 0.82;
+      letter-spacing: -0.055em;
+      text-transform: uppercase;
+      transform: rotate(-1.2deg);
+      text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .main-title .r {
+      color: var(--yellow);
+      -webkit-text-stroke: 2px var(--ink);
+      text-shadow:
+        4px 5px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .manifesto {
+      max-width: 640px;
+      margin: 22px 0 0;
+      font-family: var(--hand);
+      font-size: clamp(1.5rem, 3.1vw, 2.45rem);
+      font-weight: 700;
+      line-height: 1.02;
+      transform: rotate(0.2deg);
+    }
+
+    .doodle-card {
+      padding: 22px 22px 20px;
+      background: #f4eddf;
+      transform: rotate(0.8deg);
+    }
+
+    .doodle-card h2 {
+      margin: 0 0 10px;
+      font-family: var(--marker);
+      font-size: clamp(1.65rem, 4vw, 3.1rem);
+      line-height: 1;
+    }
+
+    .doodle-card p {
+      margin: 0.65rem 0;
+      font-family: var(--hand);
+      font-size: 1.25rem;
+      line-height: 1.05;
+    }
+
+    .critical {
+      border-left: 10px solid var(--yellow);
+      padding-left: 12px;
+    }
+
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 26px;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .mini-step {
+      position: relative;
+      padding: 14px 12px;
+      background: rgba(255, 255, 255, 0.45);
+      border: 2px solid var(--ink);
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .mini-step strong {
+      display: block;
+      margin-bottom: 5px;
+      font-family: var(--marker);
+      font-size: 1.05rem;
+    }
+
+    .mini-step span {
+      font-family: var(--hand);
+      font-size: 1.08rem;
+      line-height: 1.05;
+    }
+
+    .mini-step::before {
+      content: attr(data-n);
+      position: absolute;
+      top: -12px;
+      left: -8px;
+      width: 29px;
+      height: 29px;
+      display: grid;
+      place-items: center;
+      background: var(--paper-3);
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      font-family: var(--marker);
+      font-size: 0.85rem;
+    }
+
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .note-card {
+      padding: 16px 16px 15px;
+      background: rgba(255, 255, 255, 0.38);
+      border: 2px solid var(--ink);
+      font-family: var(--hand);
+      font-size: 1.07rem;
+      line-height: 1.08;
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .note-card strong {
+      display: block;
+      margin-bottom: 5px;
+      font-family: var(--marker);
+      font-size: 1rem;
+    }
+
+    .note-card.safety {
+      background: rgba(247, 199, 0, 0.24);
+    }
+
+    .note-card.privacy {
+      background: rgba(184, 200, 214, 0.42);
+    }
+
+    .intro-actions {
+      display: grid;
+      grid-template-columns: 1.35fr 0.85fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn-sketch {
+      position: relative;
+      padding: 17px 18px;
+      background: var(--paper-3);
+      border: 3px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        7px 8px 0 rgba(0, 0, 0, 0.18);
+      font-family: var(--marker);
+      font-size: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transform: rotate(var(--rot, 0deg));
+      transition:
+        transform 0.12s ease,
+        box-shadow 0.12s ease,
+        filter 0.12s ease;
+    }
+
+    .btn-sketch::before {
+      content: "";
+      position: absolute;
+      inset: 4px -5px -4px 5px;
+      border: 1px solid var(--ink);
+      transform: rotate(0.8deg);
+      pointer-events: none;
+    }
+
+    .btn-sketch:hover {
+      transform:
+        translateY(-2px)
+        rotate(var(--rot, 0deg));
+      filter: brightness(1.02);
+    }
+
+    .btn-sketch:active {
+      transform:
+        translateY(3px)
+        rotate(var(--rot, 0deg));
+      box-shadow:
+        3px 4px 0 rgba(0, 0, 0, 0.18);
+    }
+
+    .btn-primary {
+      background: var(--yellow);
+    }
+
+    .btn-secondary {
+      background: var(--blue);
+    }
+
+    .btn-danger {
+      background: var(--red-soft);
+    }
+
+    .source-note {
+      margin-top: 14px;
+      color: #5b554c;
+      font-family: var(--hand);
+      font-size: 0.95rem;
+      transform: rotate(-0.25deg);
+    }
+
+    .intro-doodle {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+
+    .intro-doodle.one {
+      top: 2%;
+      right: -20px;
+      width: 150px;
+      height: 150px;
+      border: 2px solid var(--ink);
+      transform: rotate(12deg);
+      border-radius: 46% 54% 50% 50%;
+    }
+
+    .intro-doodle.two {
+      bottom: 10%;
+      left: -40px;
+      width: 170px;
+      height: 100px;
+      border-top: 4px solid var(--ink);
+      border-bottom: 2px solid var(--ink);
+      transform: rotate(-12deg);
+    }
+
+    .game-screen {
+      background: #111111;
+    }
+
+    .camera-stage {
+      position: relative;
+      width: 100%;
+      height: 100svh;
+      overflow: hidden;
+      background: #d8d0c2;
+      touch-action: none;
+    }
+
+    #camera,
+    #vision-canvas,
+    #game-canvas,
+    #fx-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    #camera {
+      background:
+        radial-gradient(
+          circle at 50% 42%,
+          #504a43,
+          #111 74%
+        );
+      filter:
+        grayscale(0.35)
+        contrast(1.05)
+        sepia(0.12);
+    }
+
+    #vision-canvas,
+    #game-canvas,
+    #fx-canvas {
+      pointer-events: none;
+    }
+
+    .paper-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          rgba(239, 231, 213, 0.12),
+          rgba(239, 231, 213, 0.12)
+        ),
+        repeating-linear-gradient(
+          0deg,
+          transparent 0 28px,
+          rgba(255, 255, 255, 0.025) 28px 29px
+        );
+      mix-blend-mode: screen;
+    }
+
+    .edge-scribbles {
+      position: absolute;
+      inset: 8px;
+      z-index: 3;
+      pointer-events: none;
+      border: 3px solid rgba(20, 20, 20, 0.75);
+      transform: rotate(0.08deg);
+      box-shadow:
+        4px 2px 0 rgba(20, 20, 20, 0.15),
+        -3px 4px 0 rgba(20, 20, 20, 0.09);
+    }
+
+    .hud {
+      position: absolute;
+      z-index: 6;
+    }
+
+    .hud-top {
+      top: var(--safe-top);
+      left: 10px;
+      right: 10px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 9px;
+    }
+
+    .hud-panel {
+      position: relative;
+      padding: 8px 10px;
+      background: rgba(247, 241, 229, 0.88);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        4px 5px 0 rgba(0, 0, 0, 0.17);
+    }
+
+    .hud-panel::after {
+      content: "";
+      position: absolute;
+      inset: 2px -4px -2px 4px;
+      border: 1px solid rgba(20, 20, 20, 0.55);
+      transform: rotate(0.35deg);
+      pointer-events: none;
+    }
+
+    .hud-label {
+      font-family: var(--hand);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-block strong {
+      display: block;
+      font-family: var(--marker);
+      font-size: 1.18rem;
+    }
+
+    .risk-block {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas:
+        "label label"
+        "track text";
+      gap: 5px 10px;
+      align-items: center;
+    }
+
+    .risk-block .hud-label {
+      grid-area: label;
+    }
+
+    .risk-track {
+      grid-area: track;
+      height: 15px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.11);
+      border: 2px solid var(--ink);
+      transform: skewX(-4deg);
+    }
+
+    #risk-bar {
+      display: block;
+      width: 10%;
+      height: 100%;
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          rgba(0, 0, 0, 0.18) 0 3px,
+          transparent 3px 6px
+        ),
+        var(--yellow);
+      transition:
+        width 0.2s ease,
+        background 0.2s ease;
+    }
+
+    #risk-text {
+      grid-area: text;
+      font-family: var(--marker);
+      font-size: 0.85rem;
+    }
+
+    .mini-actions {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .mini-hud-btn {
+      min-width: 42px;
+      padding: 6px 8px;
+      background: var(--paper-3);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        3px 4px 0 rgba(0, 0, 0, 0.13);
+      font-family: var(--marker);
+      cursor: pointer;
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .sensor-panel {
+      top: 88px;
+      left: 10px;
+      right: 10px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .sensor {
+      min-width: 0;
+      padding: 7px 8px;
+      background: rgba(247, 241, 229, 0.86);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        3px 4px 0 rgba(0, 0, 0, 0.14);
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .sensor span {
+      display: block;
+      overflow: hidden;
+      font-family: var(--hand);
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .sensor strong {
+      display: block;
+      margin-top: 1px;
+      font-family: var(--marker);
+      font-size: 1.05rem;
+    }
+
+    .status-strip {
+      position: absolute;
+      z-index: 7;
+      top: 150px;
+      left: 50%;
+      max-width: calc(100% - 28px);
+      padding: 6px 10px;
+      background: var(--yellow);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        4px 5px 0 rgba(0, 0, 0, 0.15);
+      font-family: var(--marker);
+      font-size: 0.72rem;
+      text-align: center;
+      transform:
+        translateX(-50%)
+        rotate(-0.6deg);
+    }
+
+    .route-ui {
+      position: absolute;
+      z-index: 6;
+      top: 200px;
+      right: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 6px;
+      background: rgba(247, 241, 229, 0.8);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        3px 4px 0 rgba(0, 0, 0, 0.14);
+      font-family: var(--marker);
+      font-size: 0.65rem;
+      transform: rotate(0.7deg);
+    }
+
+    .route-line {
+      position: relative;
+      width: 13px;
+      height: 125px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.08);
+      border: 2px solid var(--ink);
+    }
+
+    .route-line i {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 0%;
+      background: var(--yellow);
+      transition: height 0.15s linear;
+    }
+
+    .instruction {
+      position: absolute;
+      z-index: 7;
+      left: 50%;
+      bottom: 104px;
+      padding: 5px 9px;
+      background: rgba(247, 241, 229, 0.88);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        3px 4px 0 rgba(0, 0, 0, 0.16);
+      font-family: var(--hand);
+      font-size: 1rem;
+      font-weight: 700;
+      white-space: nowrap;
+      transform:
+        translateX(-50%)
+        rotate(-0.5deg);
+    }
+
+    .controls {
+      position: absolute;
+      z-index: 8;
+      left: 50%;
+      bottom: var(--safe-bottom);
+      display: flex;
+      gap: 10px;
+      transform: translateX(-50%);
+    }
+
+    .controls button,
+    .exit-btn {
+      background: rgba(247, 241, 229, 0.92);
+      border: 3px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        4px 5px 0 rgba(0, 0, 0, 0.2);
+      font-family: var(--marker);
+      cursor: pointer;
+    }
+
+    .controls button {
+      width: 64px;
+      height: 58px;
+      font-size: 1.4rem;
+      clip-path: polygon(
+        5% 8%,
+        92% 0,
+        100% 88%,
+        9% 100%,
+        0 45%
+      );
+    }
+
+    .controls #center-btn {
+      width: 56px;
+      background: var(--yellow);
+    }
+
+    .exit-btn {
+      position: absolute;
+      z-index: 9;
+      right: 12px;
+      bottom: var(--safe-bottom);
+      width: 43px;
+      height: 43px;
+      font-size: 1.25rem;
+      transform: rotate(4deg);
+    }
+
+    .collision-flash {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(
+          circle at center,
+          rgba(216, 66, 50, 0) 0 45%,
+          rgba(216, 66, 50, 0.52) 100%
+        );
+      transition: opacity 0.12s ease;
+    }
+
+    .collision-flash.active {
+      opacity: 1;
+    }
+
+    .pause-card {
+      position: absolute;
+      z-index: 20;
+      inset: 50% auto auto 50%;
+      width: min(420px, calc(100% - 34px));
+      padding: 24px;
+      background: var(--paper-3);
+      border: 3px solid var(--ink);
+      box-shadow:
+        8px 9px 0 rgba(0, 0, 0, 0.25);
+      transform:
+        translate(-50%, -50%)
+        rotate(-0.6deg);
+    }
+
+    .pause-card h3 {
+      margin: 0 0 10px;
+      font-family: var(--marker);
+      font-size: 2rem;
+    }
+
+    .pause-card p {
+      margin: 0 0 16px;
+      font-family: var(--hand);
+      font-size: 1.15rem;
+      line-height: 1.05;
+    }
+
+    .tutorial-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 19;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 0, 0, 0.58);
+      backdrop-filter: blur(2px);
+    }
+
+    .tutorial-card {
+      width: min(520px, calc(100% - 28px));
+      padding: 22px;
+      background: var(--paper-3);
+      border: 3px solid var(--ink);
+      box-shadow:
+        7px 8px 0 rgba(0, 0, 0, 0.24);
+      transform: rotate(0.5deg);
+    }
+
+    .tutorial-card h3 {
+      margin: 0 0 12px;
+      font-family: var(--marker);
+      font-size: 1.8rem;
+    }
+
+    .tutorial-card ol {
+      margin: 0 0 18px;
+      padding-left: 22px;
+      font-family: var(--hand);
+      font-size: 1.1rem;
+      line-height: 1.1;
+    }
+
+    .result-screen {
+      min-height: 100svh;
+    }
+
+    .result-wrap {
+      width: min(900px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 36px 0 50px;
+    }
+
+    .result-title {
+      margin: 0 0 14px;
+      font-family: var(--marker);
+      font-size: clamp(2.6rem, 8vw, 6rem);
+      line-height: 0.9;
+      text-transform: uppercase;
+      transform: rotate(-0.7deg);
+    }
+
+    .result-title span {
+      color: var(--yellow);
+      -webkit-text-stroke: 1px var(--ink);
+    }
+
+    .result-message {
+      max-width: 760px;
+      font-family: var(--hand);
+      font-size: 1.45rem;
+      line-height: 1.05;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin: 26px 0;
+    }
+
+    .stats-grid > div {
+      min-height: 104px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.45);
+      border: 2px solid var(--ink);
+      box-shadow:
+        4px 5px 0 rgba(0, 0, 0, 0.12);
+      transform: rotate(var(--rot, 0deg));
+    }
+
+    .stats-grid span {
+      display: block;
+      font-family: var(--hand);
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+
+    .stats-grid strong {
+      display: block;
+      margin-top: 6px;
+      font-family: var(--marker);
+      font-size: 1.7rem;
+    }
+
+    blockquote {
+      margin: 26px 0;
+      padding: 18px 20px;
+      background: rgba(247, 199, 0, 0.32);
+      border: 3px solid var(--ink);
+      box-shadow:
+        5px 6px 0 rgba(0, 0, 0, 0.13);
+      font-family: var(--hand);
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1.05;
+      transform: rotate(0.4deg);
+    }
+
+    .reflection {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      font-family: var(--hand);
+      font-size: 1.15rem;
+      line-height: 1.08;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+    }
+
+    dialog {
+      max-width: 430px;
+      background: var(--paper-3);
+      border: 3px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        8px 9px 0 rgba(0, 0, 0, 0.22);
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.65);
+    }
+
+    dialog h3 {
+      margin-top: 0;
+      font-family: var(--marker);
+    }
+
+    dialog p {
+      font-family: var(--hand);
+      font-size: 1.1rem;
+    }
+
+    .debug-panel {
+      position: absolute;
+      z-index: 18;
+      left: 10px;
+      bottom: 90px;
+      width: 220px;
+      padding: 8px;
+      background: rgba(247, 241, 229, 0.9);
+      border: 2px solid var(--ink);
+      color: var(--ink);
+      box-shadow:
+        3px 4px 0 rgba(0, 0, 0, 0.16);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.7rem;
+      line-height: 1.3;
+    }
+
+    .debug-panel pre {
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 760px) {
+      .title-zone {
+        grid-template-columns: 1fr;
+      }
+
+      .main-title {
+        font-size: clamp(3.3rem, 17vw, 7.4rem);
+      }
+
+      .intro-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .info-row {
+        grid-template-columns: 1fr;
+      }
+
+      .intro-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .hud-top {
+        grid-template-columns: 112px 1fr auto;
+      }
+
+      .sensor-panel {
+        top: 88px;
+        max-width: 290px;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .status-strip {
+        top: 181px;
+      }
+
+      .route-ui {
+        top: 235px;
+      }
+
+      .instruction {
+        bottom: 94px;
+        font-size: 0.9rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .reflection {
+        grid-template-columns: 1fr;
+      }
+
+      .debug-panel {
+        width: 180px;
+        font-size: 0.62rem;
+      }
+    }
+  
+
+/* ===== EXTENSION WEBAR 3DoF: se conserva el diseno sketch original ===== */
+#camera { z-index:0; width:100%; height:100%; object-fit:cover; }
+#demo-backdrop { position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(178deg,#d7cec0 0%,#d9d1c5 48%,#b7aa94 100%); }
+#demo-backdrop::before { content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 35px,rgba(22,22,22,.10) 35px 36px),repeating-linear-gradient(90deg,transparent 0 60px,rgba(22,22,22,.08) 60px 61px);transform:perspective(390px) rotateX(58deg) scale(1.6);transform-origin:center bottom; }
+#demo-backdrop::after { content:"PUNTO DE OBSERVACION / ENTORNO SIMULADO";position:absolute;top:43%;width:100%;text-align:center;color:rgba(18,18,18,.19);font:1rem var(--marker);letter-spacing:.06em; }
+#three-canvas { position:absolute; inset:0; z-index:1; width:100%;height:100%;display:block;pointer-events:none; }
+#gif-layer { position:absolute; inset:0;z-index:2;overflow:hidden;pointer-events:none; }
+.gif-actor { position:absolute;left:0;top:0;will-change:transform,left,top,width,height;object-fit:contain;image-rendering:auto;filter:drop-shadow(3px 4px 0 rgba(19,19,19,.65)) drop-shadow(-1px -1px 0 rgba(255,235,152,.7));pointer-events:none;user-select:none; }
+.gif-actor--danger { filter:drop-shadow(3px 4px 0 rgba(19,19,19,.8)) drop-shadow(0 0 11px rgba(234,80,40,.6)); }
+.enemy-fallback {position:absolute;left:0;top:0;z-index:2;display:grid;place-content:center;gap:2px;width:95px;height:115px;padding:5px;text-align:center;font:1rem var(--hand);font-weight:700;color:var(--ink);background:rgba(247,241,229,.8);border:3px solid var(--ink);border-radius:37% 34% 25% 27%;box-shadow:5px 6px 0 rgba(0,0,0,.17);pointer-events:none;}
+.enemy-fallback b {font:1.5rem var(--marker);}
+#fx-canvas { z-index:3; }
+.paper-overlay { z-index:4; }
+.edge-scribbles { z-index:4; }
+.collision-flash { z-index:5; }
+#threat-layer {position:absolute;inset:0;pointer-events:none;z-index:7;}
+.threat {position:absolute;max-width:185px;padding:8px 9px;background:rgba(247,199,0,.92);color:#151515;border:2px solid #151515;box-shadow:4px 5px 0 rgba(0,0,0,.18);font:1.02rem/1 var(--hand);font-weight:700;text-align:center;animation:threatBlink 1.15s ease-in-out infinite alternate;}
+.threat small {display:block;font:0.72rem var(--marker);line-height:1.12;}
+.threat-left {left:7px;top:48%;transform:rotate(-3deg);}
+.threat-right {right:7px;top:48%;transform:rotate(3deg);}
+.threat-back {left:50%;bottom:173px;transform:translateX(-50%) rotate(-1deg);}
+@keyframes threatBlink {from {opacity:.70;}to {opacity:1;}}
+#aim-reticle {position:absolute;z-index:6;left:50%;top:52%;transform:translate(-50%,-50%);width:46px;height:46px;pointer-events:none;opacity:.75;}
+#aim-reticle::before,#aim-reticle::after {content:"";position:absolute;background:#f7c700;border:1px solid #151515;}
+#aim-reticle::before {width:29px;height:4px;top:21px;left:8px;}
+#aim-reticle::after {width:4px;height:29px;left:21px;top:8px;}
+#aim-reticle.ready::before,#aim-reticle.ready::after {background:#7bd88c;}
+#orientation-note {position:absolute;z-index:7;left:50%;top:228px;transform:translateX(-50%) rotate(-1deg);max-width:90vw;padding:4px 9px;text-align:center;color:#151515;background:rgba(244,237,223,.93);border:2px dashed #151515;font:1.03rem/1.08 var(--hand);font-weight:700;pointer-events:none;}
+#orientation-note:empty {display:none;}
+#recalibrate-btn {font-size:.86rem;min-height:22px;min-width:26px;cursor:pointer;border:1px solid #151515;background:#f7c700;color:#151515;font-family:var(--marker);}
+#fx-canvas {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+@media(max-width:760px){.threat{max-width:125px;font-size:.91rem;padding:6px}.threat small{font-size:.58rem}.threat-left,.threat-right{top:48%}#orientation-note{top:218px;font-size:.88rem}.instruction{max-width:calc(100% - 20px);text-align:center;white-space:normal;font-size:.85rem;}.hud-top {grid-template-columns:112px minmax(0,1fr) auto;gap:5px}.mini-actions{gap:3px}.mini-hud-btn{min-width:32px;padding:4px;font-size:.75rem}}
+
+  </style>
+</head>
+
+<body>
+  <div
+    class="paper-noise"
+    aria-hidden="true"
+  ></div>
+
+  <main id="app">
+    <section
+      id="intro"
+      class="screen intro-screen paper-bg"
+      aria-labelledby="project-title"
+    >
+      <div class="intro-doodle one"></div>
+      <div class="intro-doodle two"></div>
+
+      <div class="intro-wrap">
+        <div class="title-zone">
+          <header>
+            <span class="eyebrow">
+              intervención digital situada · UPTC · versión boceto expandida
+            </span>
+
+            <h1
+              id="project-title"
+              class="main-title"
+            >
+              ESQUIVAR
+              <br />
+              EL
+              <span class="r">R</span>
+            </h1>
+
+            <p class="manifesto">
+              <span class="highlight">
+                Cruzar una entrada
+              </span>
+              no debería sentirse como pasar un nivel.
+            </p>
+          </header>
+
+          <article class="doodle-card sketch-box">
+            <span class="tape tl"></span>
+            <span class="tape br"></span>
+
+            <h2>
+              EL JUEGO YA EXISTE.
+            </h2>
+
+            <p>
+              Está en cambiar de trayectoria, ceder el paso,
+              esperar frente a un torniquete y calcular por dónde
+              cabe el cuerpo.
+            </p>
+
+            <p class="critical">
+              Aquí nadie es “el enemigo”. El conflicto aparece cuando
+              <b>
+                velocidades, trayectorias y espacio
+              </b>
+              se superponen.
+            </p>
+          </article>
+        </div>
+
+        <div class="intro-grid">
+          <section
+            class="sketch-box doodle-card"
+            style="transform: rotate(-0.45deg)"
+          >
+            <span class="tape tr"></span>
+
+            <h2>
+              ¿CÓMO FUNCIONA?
+            </h2>
+
+            <div class="mini-grid">
+              <div
+                class="mini-step"
+                data-n="1"
+                style="--rot: -0.7deg"
+              >
+                <strong>
+                  CÁMARA
+                </strong>
+
+                <span>
+                  Muestra personajes a tu alrededor sobre la cámara real.
+                </span>
+              </div>
+
+              <div
+                class="mini-step"
+                data-n="2"
+                style="--rot: 0.9deg"
+              >
+                <strong>
+                  AGLOMERACIÓN
+                </strong>
+
+                <span>
+                  Los grupos y motos aumentan la presión del recorrido.
+                </span>
+              </div>
+
+              <div
+                class="mini-step"
+                data-n="3"
+                style="--rot: -0.3deg"
+              >
+                <strong>
+                  SONIDO
+                </strong>
+
+                <span>
+                  El sonido ambiental puede alterar la experiencia sin grabarse.
+                </span>
+              </div>
+
+              <div
+                class="mini-step"
+                data-n="4"
+                style="--rot: 0.6deg"
+              >
+                <strong>
+                  JUEGO
+                </strong>
+
+                <span>
+                  Gira, localiza enemigos y esquívalos con un toque.
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class="info-row">
+              <article
+                class="note-card safety"
+                style="--rot: -0.8deg"
+              >
+                <strong>
+                  SEGURIDAD
+                </strong>
+
+                Juega detenido en una zona segura.
+                No cruces la entrada mirando la pantalla.
+              </article>
+
+              <article
+                class="note-card privacy"
+                style="--rot: 0.7deg"
+              >
+                <strong>
+                  PRIVACIDAD
+                </strong>
+
+                No hay reconocimiento facial.
+                No se guarda video ni audio y el análisis
+                ocurre en el dispositivo.
+              </article>
+            </div>
+
+            <div class="intro-actions">
+              <button
+                id="start-ar"
+                class="btn-sketch btn-primary"
+                style="--rot: -0.6deg"
+              >
+                ACTIVAR CÁMARA Y EMPEZAR
+              </button>
+
+              <button
+                id="start-demo"
+                class="btn-sketch btn-secondary"
+                style="--rot: 0.8deg"
+              >
+                PROBAR SIN CÁMARA
+              </button>
+            </div>
+
+            <p class="source-note">
+              Proyecto de investigación-creación “Esquivar el R”.
+              Prototipo web experimental.
+            </p>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section
+      id="game"
+      class="screen game-screen hidden"
+      aria-label="Juego Esquivar el R"
+    >
+      <div
+        id="camera-stage"
+        class="camera-stage"
+      >
+        <video
+          id="camera"
+          playsinline
+          muted
+        ></video>
+
+        <div id="demo-backdrop" class="hidden" aria-hidden="true"></div>
+        <canvas id="three-canvas" aria-label="Escena WebAR 3DoF con Three.js"></canvas>
+        <div id="gif-layer" aria-hidden="true"></div>
+        <canvas id="fx-canvas"></canvas>
+        <div id="aim-reticle" aria-hidden="true"></div>
+        <div id="orientation-note" aria-live="polite"></div>
+        <div id="threat-layer" aria-live="off">
+          <div id="threat-left" class="threat threat-left hidden"></div>
+          <div id="threat-right" class="threat threat-right hidden"></div>
+          <div id="threat-back" class="threat threat-back hidden"></div>
+        </div>
+
+        <div class="paper-overlay"></div>
+        <div class="edge-scribbles"></div>
+        <div
+          id="collision-flash"
+          class="collision-flash"
+        ></div>
+
+        <div class="hud hud-top">
+          <div class="hud-panel brand-block">
+            <span class="hud-label">
+              ESQUIVAR EL R
+            </span>
+
+            <strong id="game-time">
+              00:45
+            </strong>
+          </div>
+
+          <div class="hud-panel risk-block">
+            <span class="hud-label">
+              PRESIÓN DEL ENTORNO
+            </span>
+
+            <div class="risk-track">
+              <span id="risk-bar"></span>
+            </div>
+
+            <strong id="risk-text">
+              BAJA
+            </strong>
+          </div>
+
+          <div class="mini-actions">
+            <button
+              id="sound-btn"
+              class="mini-hud-btn"
+              style="--rot: -1deg"
+              aria-label="Activar o desactivar sonido"
+            >
+              ♪
+            </button>
+
+            <button
+              id="pause-btn"
+              class="mini-hud-btn"
+              style="--rot: 1deg"
+              aria-label="Pausar"
+            >
+              ‖
+            </button>
+
+            <button
+              id="help-btn"
+              class="mini-hud-btn"
+              style="--rot: -0.5deg"
+              aria-label="Mostrar ayuda"
+            >
+              ?
+            </button>
+          </div>
+        </div>
+
+        <div class="hud sensor-panel">
+          <div
+            class="sensor"
+            style="--rot: -0.7deg"
+          >
+            <span>
+              PERSONAS
+            </span>
+
+            <strong id="people-count">
+              0
+            </strong>
+          </div>
+
+          <div
+            class="sensor"
+            style="--rot: 0.5deg"
+          >
+            <span>
+              MOTOS
+            </span>
+
+            <strong id="moto-count">
+              0
+            </strong>
+          </div>
+
+          <div
+            class="sensor"
+            style="--rot: -0.4deg"
+          >
+            <span>
+              AGLOMERACIÓN
+            </span>
+
+            <strong id="crowd-state">
+              NO
+            </strong>
+          </div>
+
+          <div
+            class="sensor"
+            style="--rot: 0.7deg"
+          >
+            <span>
+              SONIDO
+            </span>
+
+            <strong id="sound-state">
+              BAJO
+            </strong>
+          </div>
+        </div>
+
+        <div
+          id="status-strip"
+          class="status-strip"
+        >
+          INICIANDO SENSORES…
+        </div>
+
+        <div
+          class="route-ui"
+          aria-hidden="true"
+        >
+          <span>
+            CALLE
+          </span>
+
+          <div class="route-line">
+            <i id="route-progress"></i>
+          </div>
+
+          <span>R</span>
+          <button id="recalibrate-btn" aria-label="Recalibrar orientación" title="Recalibrar">⟳</button>
+        </div>
+
+        <div class="instruction">
+          GIRA EL CELULAR · TOCA UN ENEMIGO PARA ESQUIVARLO
+        </div>
+
+        <div
+          class="controls"
+          aria-label="Controles del jugador"
+        >
+          <button
+            id="left-btn"
+            aria-label="Mover a la izquierda"
+          >
+            ←
+          </button>
+
+          <button
+            id="center-btn"
+            aria-label="Centrar"
+          >
+            •
+          </button>
+
+          <button
+            id="right-btn"
+            aria-label="Mover a la derecha"
+          >
+            →
+          </button>
+        </div>
+
+        <button
+          id="exit-btn"
+          class="exit-btn"
+          aria-label="Salir del juego"
+        >
+          ×
+        </button>
+
+        <aside
+          id="debug-panel"
+          class="debug-panel hidden"
+          aria-label="Panel de depuración"
+        >
+          <pre id="debug-output"></pre>
+        </aside>
+
+        <div
+          id="pause-card"
+          class="pause-card hidden"
+        >
+          <h3>
+            PAUSA
+          </h3>
+
+          <p>
+            El flujo se detuvo.
+            La entrada real no siempre puede hacerlo.
+          </p>
+
+          <button
+            id="resume-btn"
+            class="btn-sketch btn-primary"
+          >
+            CONTINUAR
+          </button>
+        </div>
+
+        <div
+          id="tutorial-overlay"
+          class="tutorial-overlay hidden"
+        >
+          <div class="tutorial-card">
+            <h3>
+              ¿CÓMO JUGAR?
+            </h3>
+
+            <ol>
+              <li>
+                Observa el lugar desde un punto seguro.
+              </li>
+
+              <li>
+                Gira físicamente con el celular para encontrar enemigos a tu alrededor.
+              </li>
+
+              <li>
+                Toca un enemigo en la pantalla o usa el botón central cuando esté bajo la mira para esquivarlo.
+              </li>
+
+              <li>
+                No camines: juega detenido en un lugar seguro. Si no hay sensor, usa las flechas o arrastra para girar la vista.
+              </li>
+            </ol>
+
+            <button
+              id="close-help"
+              class="btn-sketch btn-primary"
+            >
+              ENTENDIDO
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section
+      id="result"
+      class="screen result-screen paper-bg hidden"
+      aria-labelledby="result-title"
+    >
+      <div class="result-wrap">
+        <span class="eyebrow">
+          recorrido terminado
+        </span>
+
+        <h2
+          id="result-title"
+          class="result-title"
+        >
+          ¿CUÁNTO TUVISTE QUE
+          <span>
+            ESQUIVAR
+          </span>
+          ?
+        </h2>
+
+        <p
+          id="result-message"
+          class="result-message"
+        ></p>
+
+        <div class="stats-grid">
+          <div style="--rot: -0.4deg">
+            <span>
+              COLISIONES
+            </span>
+
+            <strong id="stat-collisions">
+              0
+            </strong>
+          </div>
+
+          <div style="--rot: 0.5deg">
+            <span>
+              EVASIONES
+            </span>
+
+            <strong id="stat-dodges">
+              0
+            </strong>
+          </div>
+
+          <div style="--rot: -0.7deg">
+            <span>
+              MÁX. PERSONAS
+            </span>
+
+            <strong id="stat-people">
+              0
+            </strong>
+          </div>
+
+          <div style="--rot: 0.4deg">
+            <span>
+              MOTOS DETECTADAS
+            </span>
+
+            <strong id="stat-motos">
+              0
+            </strong>
+          </div>
+
+          <div style="--rot: -0.3deg">
+            <span>
+              PICOS DE SONIDO
+            </span>
+
+            <strong id="stat-sound">
+              0
+            </strong>
+          </div>
+
+          <div style="--rot: 0.6deg">
+            <span>
+              TIEMPO EN AGLOMERACIÓN
+            </span>
+
+            <strong id="stat-crowd">
+              0 s
+            </strong>
+          </div>
+        </div>
+
+        <blockquote>
+          “El problema no es una persona, una moto o un grupo por separado.
+          El problema aparece cuando todos deben negociar el mismo espacio
+          al mismo tiempo.”
+        </blockquote>
+
+        <div class="reflection">
+          <p>
+            En el juego, esquivar es una mecánica.
+            En la Entrada del R, puede convertirse en una conducta normalizada.
+          </p>
+
+          <p>
+            La intervención no mide científicamente el tránsito:
+            transforma la percepción del lugar para hacer visible
+            la cantidad de decisiones pequeñas que exige atravesarlo.
+          </p>
+        </div>
+
+        <div class="result-actions">
+          <button
+            id="play-again"
+            class="btn-sketch btn-primary"
+          >
+            VOLVER A JUGAR
+          </button>
+
+          <button
+            id="back-intro"
+            class="btn-sketch btn-secondary"
+          >
+            VOLVER AL INICIO
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <dialog id="permission-dialog">
+      <h3>
+        Permisos del navegador
+      </h3>
+
+      <p>
+        Para la experiencia situada, permite acceso a cámara y micrófono.
+        Si algún permiso falla, puedes usar el modo demostración.
+      </p>
+
+      <button
+        id="dialog-close"
+        class="btn-sketch btn-secondary"
+      >
+        ENTENDIDO
+      </button>
+    </dialog>
+  </main>
+  <script type="module">
+/*
+ * ESQUIVAR EL R — WEBAR 3DoF
+ * Un unico HTML; unica dependencia externa: Three.js (importacion diferida).
+ * Los siete GIF se muestran como sprites DOM animados, posicionados mediante
+ * proyecciones 3D de Three.js. Las mallas invisibles reciben el Raycaster.
+ * No hay seguimiento de posicion 6DoF ni anclaje espacial del mundo real.
+ */
+
+const $ = (id) => document.getElementById(id);
+
+const CONFIG = Object.freeze({
+  duration: 65,
+  initialDistance: 8.8,
+  minimumDistance: 1.25,
+  dodgeMaximumDistance: 8.7,
+  spawnBaseMilliseconds: 1700,
+  spawnMinimumMilliseconds: 850,
+  spawnLimit: 18,
+  maximumPixelRatio: 1.8,
+  fieldOfView: 66,
+  exposureSeconds: 6.5,
+  angularSteering: 0.045,
+  motionSampleDelay: 2000,
+  microphonePeak: 0.15,
+  soundSmoothing: 0.8,
+});
+
+// Subir los archivos EXACTAMENTE con estos nombres, respetando ñ y minusculas.
+const CHARACTER_TYPES = Object.freeze({
+  enojado: {
+    filename: "enojado.gif",
+    label: "ENOJADO",
+    className: "persona",
+    speed: 1.72,
+    width: 1.55,
+    height: 2.25,
+    behavior: "fast",
+    alert: "PERSONA CON AFÁN",
+    color: 0xf7c700,
+  },
+  gordo: {
+    filename: "gordo.gif",
+    label: "GORDO",
+    className: "persona",
+    speed: 0.70,
+    width: 2.0,
+    height: 2.35,
+    behavior: "zigzag",
+    alert: "MOVIMIENTO EN ZIGZAG",
+    color: 0xb8c8d6,
+  },
+  ñoño: {
+    filename: "ñoño.gif",
+    label: "ÑOÑO",
+    className: "persona",
+    speed: 0.68,
+    width: 1.55,
+    height: 2.24,
+    behavior: "slow",
+    alert: "PEATÓN DESPACIO",
+    color: 0xe2c88e,
+  },
+  lanegracandela: {
+    filename: "lanegracandela.gif",
+    label: "LA NEGRA CANDELA",
+    className: "persona",
+    speed: 1.68,
+    width: 1.6,
+    height: 2.30,
+    behavior: "fast",
+    alert: "PERSONA MUY RÁPIDA",
+    color: 0xe48b5b,
+  },
+  valentina: {
+    filename: "valentina.gif",
+    label: "VALENTINA",
+    className: "persona",
+    speed: 0.96,
+    width: 1.6,
+    height: 2.30,
+    behavior: "suddenTurn",
+    alert: "CAMBIO DE TRAYECTORIA",
+    color: 0xa1b4d4,
+  },
+  negraenmoto: {
+    filename: "negraenmoto.gif",
+    label: "NEGRA EN MOTO",
+    className: "moto",
+    speed: 1.38,
+    width: 2.65,
+    height: 2.10,
+    behavior: "erratic",
+    alert: "MOTO IMPREDECIBLE",
+    color: 0xf19463,
+  },
+  motociclista: {
+    filename: "motociclista.gif",
+    label: "MOTOCICLISTA",
+    className: "moto",
+    speed: 1.86,
+    width: 2.65,
+    height: 2.03,
+    behavior: "motorcyclePack",
+    alert: "MOTO RÁPIDA",
+    color: 0xffc84a,
+  },
+});
+
+const SPRITE_DIRECTORY = "assets/personajes/";
+const THREE_MODULE_URL = "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js";
+const stage = $("camera-stage");
+const video = $("camera");
+const threeCanvas = $("three-canvas");
+const gifLayer = $("gif-layer");
+const demoBackdrop = $("demo-backdrop");
+const effectsCanvas = $("fx-canvas");
+const effectsContext = effectsCanvas.getContext("2d");
+const compassMessages = {
+  left: $("threat-left"),
+  right: $("threat-right"),
+  back: $("threat-back"),
+};
+
+let THREE = null;
+let scene = null;
+let camera = null;
+let renderer = null;
+let raycaster = null;
+let threeLoadingPromise = null;
+let currentStream = null;
+let microphoneStream = null;
+let audioContext = null;
+let microphoneAnalyser = null;
+let microphoneData = null;
+let microphoneSource = null;
+let currentSession = 0;
+let frameRequest = 0;
+let lastFrameTime = 0;
+let lastHudTime = 0;
+let lastWarningTime = 0;
+let lastSpawnTime = 0;
+let sensorSampleTimer = null;
+let orientationListening = false;
+let sensorPermissionGranted = false;
+let orientationHasSamples = false;
+let orientationLastSample = 0;
+let orientationQuaternion = null;
+let alignmentQuaternion = null;
+let wasCalibrated = false;
+let manualYaw = 0;
+let manualPitch = 0;
+let clockSeconds = 0;
+let elapsedPaused = 0;
+let pauseStarted = 0;
+let objectSequence = 0;
+let effectEvents = [];
+let lastSoundPeak = false;
+let tutorialHasShown = false;
+let gestureStart = null;
+const activeActors = [];
+const preloadedSprites = new Map();
+const spriteAvailability = new Map();
+
+const gameState = {
+  mode: "demo",
+  running: false,
+  paused: false,
+  musicEnabled: true,
+  startedAt: 0,
+  people: 0,
+  motos: 0,
+  crowd: false,
+  sound: 0,
+  soundPeaks: 0,
+  crowdSeconds: 0,
+  maxPeople: 0,
+  totalMotos: 0,
+  collisions: 0,
+  dodges: 0,
+  streak: 0,
+  maxStreak: 0,
+  score: 0,
+  risk: 0.25,
+  nearestThreat: null,
+};
+
+function changeScreen(name) {
+  $("intro").classList.toggle("hidden", name !== "intro");
+  $("game").classList.toggle("hidden", name !== "game");
+  $("result").classList.toggle("hidden", name !== "result");
+}
+
+function updateStatus(text, tone = "ok") {
+  const strip = $("status-strip");
+  strip.textContent = text;
+  strip.style.background = tone === "danger"
+    ? "#d84232"
+    : tone === "warn"
+      ? "#f7c700"
+      : "#efe7d5";
+  strip.style.color = "#151515";
+}
+
+function updateOrientationNote(text) {
+  $("orientation-note").textContent = text || "";
+}
+
+function showErrorOnIntro(error) {
+  console.error("Esquivar el R:", error);
+  changeScreen("intro");
+  const source = document.querySelector(".source-note");
+  if (source) {
+    source.textContent = `Error al iniciar WebAR: ${error.message || error}. Comprueba la conexión a internet.`;
+  }
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
+
+function wrapAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function choose(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+function randomBetween(minimum, maximum) {
+  return minimum + Math.random() * (maximum - minimum);
+}
+
+function resizeEffects() {
+  const rect = stage.getBoundingClientRect();
+  const pixelRatio = Math.min(devicePixelRatio || 1, 2);
+  effectsCanvas.width = Math.max(2, Math.round(rect.width * pixelRatio));
+  effectsCanvas.height = Math.max(2, Math.round(rect.height * pixelRatio));
+  effectsContext.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+}
+
+function resizeThree() {
+  if (!renderer || !camera) return;
+  const rect = stage.getBoundingClientRect();
+  const width = Math.max(1, rect.width);
+  const height = Math.max(1, rect.height);
+  renderer.setSize(width, height, false);
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  resizeEffects();
+}
+
+window.addEventListener("resize", resizeThree);
+window.addEventListener("orientationchange", () => {
+  window.setTimeout(resizeThree, 260);
+});
+
+// La carga de Three.js es diferida: el inicio no puede quedarse negro si falla CDN.
+function loadThree() {
+  if (THREE) return Promise.resolve(THREE);
+  if (!threeLoadingPromise) {
+    threeLoadingPromise = import(THREE_MODULE_URL)
+      .then((module) => {
+        THREE = module;
+        return THREE;
+      })
+      .catch((error) => {
+        threeLoadingPromise = null;
+        throw new Error(`No se pudo cargar Three.js: ${error.message}`);
+      });
+  }
+  return threeLoadingPromise;
+}
+
+function buildThreeScene() {
+  if (renderer) return;
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(CONFIG.fieldOfView, 1, 0.05, 120);
+  camera.position.set(0, 0, 0);
+  raycaster = new THREE.Raycaster();
+  renderer = new THREE.WebGLRenderer({
+    canvas: threeCanvas,
+    alpha: true,
+    antialias: true,
+    powerPreference: "low-power",
+  });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, CONFIG.maximumPixelRatio));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  orientationQuaternion = new THREE.Quaternion();
+  alignmentQuaternion = new THREE.Quaternion();
+  resizeThree();
+}
+
+// Los GIF se reproducen en elementos <img>, no en CanvasTexture.
+// De este modo el navegador mantiene sus fotogramas animados de forma natural.
+function preloadCharacters() {
+  Object.entries(CHARACTER_TYPES).forEach(([key, definition]) => {
+    if (preloadedSprites.has(key)) return;
+    const image = new Image();
+    image.decoding = "async";
+    image.loading = "eager";
+    image.src = encodeURI(SPRITE_DIRECTORY + definition.filename);
+    preloadedSprites.set(key, image);
+    image.addEventListener("load", () => spriteAvailability.set(key, true));
+    image.addEventListener("error", () => {
+      spriteAvailability.set(key, false);
+      console.warn("Falta el GIF:", SPRITE_DIRECTORY + definition.filename);
+    });
+  });
+}
+
+function resetGameplay() {
+  gameState.running = true;
+  gameState.paused = false;
+  gameState.startedAt = performance.now();
+  gameState.people = 0;
+  gameState.motos = 0;
+  gameState.crowd = false;
+  gameState.sound = 0;
+  gameState.soundPeaks = 0;
+  gameState.crowdSeconds = 0;
+  gameState.maxPeople = 0;
+  gameState.totalMotos = 0;
+  gameState.collisions = 0;
+  gameState.dodges = 0;
+  gameState.streak = 0;
+  gameState.maxStreak = 0;
+  gameState.score = 0;
+  gameState.risk = 0.25;
+  gameState.nearestThreat = null;
+  elapsedPaused = 0;
+  pauseStarted = 0;
+  clockSeconds = 0;
+  lastFrameTime = 0;
+  lastSpawnTime = 0;
+  lastSoundPeak = false;
+  manualYaw = 0;
+  manualPitch = 0;
+  wasCalibrated = false;
+  effectEvents = [];
+  $("pause-card").classList.add("hidden");
+  $("tutorial-overlay").classList.add("hidden");
+  $("pause-btn").textContent = "‖";
+  activeActors.slice().forEach(removeActor);
+  Object.values(compassMessages).forEach((item) => item.classList.add("hidden"));
+}
+
+function makeSphericalPosition(radius, angle, elevation) {
+  const spherical = new THREE.Spherical(
+    radius,
+    Math.PI / 2 - elevation,
+    Math.PI - angle
+  );
+  return new THREE.Vector3().setFromSpherical(spherical);
+}
+
+function makeActorNode(type) {
+  const definition = CHARACTER_TYPES[type];
+  const image = document.createElement("img");
+  image.className = "gif-actor";
+  image.alt = definition.label;
+  image.setAttribute("draggable", "false");
+  image.src = encodeURI(SPRITE_DIRECTORY + definition.filename);
+  image.style.display = "none";
+  const fallback = document.createElement("div");
+  fallback.className = "enemy-fallback";
+  fallback.innerHTML = `<b>${definition.className === "moto" ? "🏍" : "✎"}</b>${definition.label}`;
+  fallback.style.display = "none";
+  image.addEventListener("load", () => {
+    image.dataset.loaded = "true";
+  });
+  image.addEventListener("error", () => {
+    image.dataset.failed = "true";
+  });
+  gifLayer.append(image, fallback);
+  return { image, fallback };
+}
+
+function spawnActor(type, options = {}) {
+  if (activeActors.length >= CONFIG.spawnLimit) return null;
+  const definition = CHARACTER_TYPES[type];
+  const angle = options.angle ?? randomBetween(-Math.PI, Math.PI);
+  const elevation = options.elevation ?? randomBetween(-0.075, 0.075);
+  const distance = options.distance ?? randomBetween(8.0, 10.5);
+  const geometry = new THREE.PlaneGeometry(definition.width, definition.height);
+  const material = new THREE.MeshBasicMaterial({
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  const hitbox = new THREE.Mesh(geometry, material);
+  hitbox.position.copy(makeSphericalPosition(distance, angle, elevation));
+  hitbox.userData.actorId = ++objectSequence;
+  scene.add(hitbox);
+  const decorativeRing = new THREE.Mesh(
+    new THREE.RingGeometry(0.53, 0.565, 42),
+    new THREE.MeshBasicMaterial({
+      color: definition.color,
+      transparent: true,
+      opacity: 0.54,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    })
+  );
+  decorativeRing.position.copy(hitbox.position);
+  scene.add(decorativeRing);
+  const node = makeActorNode(type);
+  const actor = {
+    id: hitbox.userData.actorId,
+    type,
+    definition,
+    hitbox,
+    ring: decorativeRing,
+    element: node.image,
+    fallback: node.fallback,
+    angle,
+    elevation,
+    distance,
+    speed: definition.speed * randomBetween(0.92, 1.10),
+    age: 0,
+    turnAt: randomBetween(1.0, 2.5),
+    motionSeed: Math.random() * 50,
+    lastScreenX: 0,
+    lastScreenY: 0,
+    visible: false,
+  };
+  activeActors.push(actor);
+  if (definition.className === "moto") gameState.totalMotos++;
+  return actor;
+}
+
+function removeActor(actor) {
+  const index = activeActors.indexOf(actor);
+  if (index >= 0) activeActors.splice(index, 1);
+  if (scene && actor.hitbox) scene.remove(actor.hitbox);
+  if (scene && actor.ring) scene.remove(actor.ring);
+  if (actor.hitbox) {
+    actor.hitbox.geometry.dispose();
+    actor.hitbox.material.dispose();
+  }
+  if (actor.ring) {
+    actor.ring.geometry.dispose();
+    actor.ring.material.dispose();
+  }
+  actor.element?.remove();
+  actor.fallback?.remove();
+}
+
+function spawnMotorcyclePack(angle) {
+  const length = activeActors.length < CONFIG.spawnLimit - 2 ? 3 : 1;
+  for (let i = 0; i < length; i++) {
+    spawnActor("motociclista", {
+      angle: angle + (i - 1) * 0.15,
+      distance: 8.6 + i * 0.35,
+    });
+  }
+  if (length === 3) {
+    updateStatus("¡TRES MOTOCICLISTAS VIENEN JUNTOS!", "warn");
+  }
+}
+
+function spawnRandomActor() {
+  const types = Object.keys(CHARACTER_TYPES);
+  const type = choose(types);
+  const angle = randomBetween(-Math.PI, Math.PI);
+  if (type === "motociclista" && Math.random() < 0.32) {
+    spawnMotorcyclePack(angle);
+  } else {
+    spawnActor(type, { angle });
+  }
+}
+
+function spawnInitialActors() {
+  spawnActor("enojado", { angle: 0.04, distance: 8.7 });
+  spawnActor("valentina", { angle: 0.85, distance: 8.4 });
+  spawnActor("ñoño", { angle: -1.05, distance: 8.0 });
+  spawnActor("negraenmoto", { angle: -2.25, distance: 9.2 });
+}
+
+function updateActorMotion(actor, deltaSeconds) {
+  actor.age += deltaSeconds;
+  const behavior = actor.definition.behavior;
+  actor.distance -= actor.speed * deltaSeconds;
+  if (behavior === "zigzag") {
+    actor.angle += Math.sin(actor.age * 3.15 + actor.motionSeed)
+      * 0.72 * deltaSeconds;
+  } else if (behavior === "suddenTurn") {
+    if (actor.age >= actor.turnAt) {
+      actor.angle += choose([-1, 1]) * randomBetween(0.30, 0.55);
+      actor.turnAt = actor.age + randomBetween(0.9, 1.9);
+      addScreenEffect("¡CAMBIÓ DE DIRECCIÓN!", "#f7c700", actor.lastScreenX, actor.lastScreenY);
+    }
+  } else if (behavior === "erratic") {
+    actor.angle += Math.sin(actor.age * 6.1 + actor.motionSeed)
+      * 1.12 * deltaSeconds;
+    if (actor.age >= actor.turnAt) {
+      actor.angle += choose([-1, 1]) * randomBetween(0.24, 0.72);
+      actor.turnAt = actor.age + randomBetween(0.45, 1.2);
+    }
+  } else if (behavior === "motorcyclePack") {
+    actor.angle += Math.sin(actor.age * 1.9 + actor.motionSeed)
+      * 0.16 * deltaSeconds;
+  }
+  actor.angle = wrapAngle(actor.angle);
+  actor.hitbox.position.copy(makeSphericalPosition(
+    actor.distance,
+    actor.angle,
+    actor.elevation
+  ));
+  actor.ring.position.copy(actor.hitbox.position);
+}
+
+function registerCollision(actor) {
+  gameState.collisions++;
+  gameState.streak = 0;
+  addScreenEffect("¡CHOQUE!", "#d84232", actor.lastScreenX, actor.lastScreenY);
+  const flash = $("collision-flash");
+  flash.classList.add("active");
+  window.setTimeout(() => flash.classList.remove("active"), 130);
+  if (navigator.vibrate) navigator.vibrate([70, 35, 45]);
+  playEffect("hit");
+  updateStatus(`¡COLISIÓN CON ${actor.definition.label}!`, "danger");
+  removeActor(actor);
+}
+
+function registerDodge(actor) {
+  if (!actor || !activeActors.includes(actor)) return;
+  if (actor.distance > CONFIG.dodgeMaximumDistance) {
+    updateStatus("ESPERA A QUE SE ACERQUE UN POCO MÁS", "warn");
+    return;
+  }
+  gameState.dodges++;
+  gameState.streak++;
+  gameState.maxStreak = Math.max(gameState.maxStreak, gameState.streak);
+  gameState.score += 25 + Math.min(50, gameState.streak * 5);
+  addScreenEffect("¡ESQUIVADO!", "#f7c700", actor.lastScreenX, actor.lastScreenY);
+  playEffect("dodge");
+  updateStatus(`${actor.definition.label} · ESQUIVADO`, "ok");
+  removeActor(actor);
+}
+
+function processActorUpdates(deltaSeconds) {
+  const candidates = activeActors.slice();
+  for (const actor of candidates) {
+    updateActorMotion(actor, deltaSeconds);
+    if (actor.distance <= CONFIG.minimumDistance) {
+      registerCollision(actor);
+    }
+  }
+}
+
+function getCameraYaw() {
+  const direction = new THREE.Vector3(0, 0, -1)
+    .applyQuaternion(camera.quaternion);
+  return Math.atan2(direction.x, -direction.z);
+}
+
+function rotateCameraFromSensor(alpha, beta, gamma) {
+  const euler = new THREE.Euler(
+    THREE.MathUtils.degToRad(beta),
+    THREE.MathUtils.degToRad(alpha),
+    THREE.MathUtils.degToRad(-gamma),
+    "YXZ"
+  );
+  const deviceQuaternion = new THREE.Quaternion().setFromEuler(euler);
+  const rotateBack = new THREE.Quaternion(
+    -Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)
+  );
+  deviceQuaternion.multiply(rotateBack);
+  const screenAngle = window.screen.orientation?.angle
+    ?? window.orientation
+    ?? 0;
+  const screenRotation = new THREE.Quaternion().setFromAxisAngle(
+    new THREE.Vector3(0, 0, 1),
+    -THREE.MathUtils.degToRad(Number(screenAngle))
+  );
+  deviceQuaternion.multiply(screenRotation);
+  orientationQuaternion.copy(deviceQuaternion);
+  if (!wasCalibrated) {
+    recalibrateOrientation();
+  }
+}
+
+function recalibrateOrientation() {
+  if (!THREE || !orientationQuaternion) return;
+  const vector = new THREE.Vector3(0, 0, -1)
+    .applyQuaternion(orientationQuaternion);
+  const observedYaw = Math.atan2(vector.x, -vector.z);
+  alignmentQuaternion.setFromAxisAngle(
+    new THREE.Vector3(0, 1, 0),
+    -observedYaw
+  );
+  manualYaw = 0;
+  wasCalibrated = true;
+  if (orientationHasSamples) {
+    updateStatus("GIROSCOPIO RECALIBRADO · MIRA A TU ALREDEDOR", "ok");
+  }
+}
+
+function onDeviceOrientation(event) {
+  if (!THREE) return;
+  if (!Number.isFinite(event.alpha)
+      || !Number.isFinite(event.beta)
+      || !Number.isFinite(event.gamma)) return;
+  orientationHasSamples = true;
+  orientationLastSample = performance.now();
+  rotateCameraFromSensor(event.alpha, event.beta, event.gamma);
+  if (sensorSampleTimer) {
+    clearTimeout(sensorSampleTimer);
+    sensorSampleTimer = null;
+  }
+  updateOrientationNote("");
+}
+
+function enableSensorListeners() {
+  if (orientationListening) return;
+  orientationListening = true;
+  window.addEventListener("deviceorientation", onDeviceOrientation, true);
+  sensorSampleTimer = window.setTimeout(() => {
+    if (!orientationHasSamples && gameState.running) {
+      updateOrientationNote("SIN GIROSCOPIO: ARRASTRA O USA ← Y →");
+    }
+  }, CONFIG.motionSampleDelay);
+}
+
+function disableSensorListeners() {
+  if (orientationListening) {
+    window.removeEventListener("deviceorientation", onDeviceOrientation, true);
+  }
+  orientationListening = false;
+  if (sensorSampleTimer) clearTimeout(sensorSampleTimer);
+  sensorSampleTimer = null;
+}
+
+// IMPORTANTE: se llama directamente dentro del click, ANTES de cualquier await.
+// iOS exige que requestPermission() ocurra bajo una activacion de usuario real.
+function askSensorPermissionImmediately() {
+  if (typeof DeviceOrientationEvent === "undefined") {
+    return Promise.resolve(false);
+  }
+  if (typeof DeviceOrientationEvent.requestPermission === "function") {
+    try {
+      return DeviceOrientationEvent.requestPermission()
+        .then((result) => result === "granted")
+        .catch(() => false);
+    } catch (error) {
+      return Promise.resolve(false);
+    }
+  }
+  return Promise.resolve(true);
+}
+
+function updateCameraQuaternion() {
+  if (!camera || !THREE) return;
+  if (orientationHasSamples) {
+    camera.quaternion.copy(alignmentQuaternion)
+      .multiply(orientationQuaternion);
+    const manualCorrection = new THREE.Quaternion().setFromAxisAngle(
+      new THREE.Vector3(0, 1, 0), manualYaw
+    );
+    camera.quaternion.premultiply(manualCorrection);
+  } else {
+    camera.rotation.order = "YXZ";
+    camera.rotation.set(manualPitch, manualYaw, 0, "YXZ");
+  }
+  camera.updateMatrixWorld(true);
+}
+
+function projectedSpriteRect(actor, viewportWidth, viewportHeight) {
+  const position = actor.hitbox.position;
+  const localPosition = camera.worldToLocal(position.clone());
+  if (localPosition.z > -0.16) return null;
+  const projected = position.clone().project(camera);
+  if (projected.z < -1 || projected.z > 1) return null;
+  const cameraRight = new THREE.Vector3(1, 0, 0)
+    .applyQuaternion(camera.quaternion)
+    .multiplyScalar(actor.definition.width / 2);
+  const cameraUp = new THREE.Vector3(0, 1, 0)
+    .applyQuaternion(camera.quaternion)
+    .multiplyScalar(actor.definition.height / 2);
+  const pointRight = position.clone().add(cameraRight).project(camera);
+  const pointUp = position.clone().add(cameraUp).project(camera);
+  const width = Math.abs(pointRight.x - projected.x) * viewportWidth;
+  const height = Math.abs(pointUp.y - projected.y) * viewportHeight;
+  return {
+    x: (projected.x * .5 + .5) * viewportWidth,
+    y: (-projected.y * .5 + .5) * viewportHeight,
+    width: clamp(width, 5, viewportWidth * 2.3),
+    height: clamp(height, 5, viewportHeight * 2.3),
+    inView: projected.x > -1.3 && projected.x < 1.3
+      && projected.y > -1.2 && projected.y < 1.2,
+  };
+}
+
+function setActorVisibility(actor, visible) {
+  actor.visible = visible;
+  actor.element.style.display = visible && actor.element.dataset.loaded ? "block" : "none";
+  actor.fallback.style.display = visible && !actor.element.dataset.loaded ? "grid" : "none";
+}
+
+function updateProjectedActors() {
+  const bounds = stage.getBoundingClientRect();
+  camera.updateMatrixWorld(true);
+  for (const actor of activeActors) {
+    actor.hitbox.quaternion.copy(camera.quaternion);
+    actor.ring.quaternion.copy(camera.quaternion);
+    const rect = projectedSpriteRect(actor, bounds.width, bounds.height);
+    const visible = Boolean(rect && rect.inView);
+    setActorVisibility(actor, visible);
+    if (!visible) continue;
+    actor.lastScreenX = rect.x;
+    actor.lastScreenY = rect.y;
+    const target = actor.element.dataset.loaded ? actor.element : actor.fallback;
+    target.style.left = `${rect.x}px`;
+    target.style.top = `${rect.y}px`;
+    target.style.width = `${rect.width}px`;
+    target.style.height = `${rect.height}px`;
+    target.style.transform = "translate(-50%, -50%)";
+    const danger = actor.distance < 3.0;
+    actor.element.classList.toggle("gif-actor--danger", danger);
+    actor.ring.material.opacity = danger ? 0.74 : 0.3;
+    actor.ring.scale.setScalar(Math.min(2.3, 1 + (9.5 - actor.distance) * .07));
+  }
+}
+
+function directionFromActor(actor, yaw) {
+  const delta = wrapAngle(actor.angle - yaw);
+  if (Math.abs(delta) > 2.53) return "back";
+  return delta < 0 ? "left" : "right";
+}
+
+function displayThreatWarnings(now) {
+  if (now - lastWarningTime < 100) return;
+  lastWarningTime = now;
+  const yaw = getCameraYaw();
+  const threats = activeActors.filter((actor) => {
+    const eta = (actor.distance - CONFIG.minimumDistance) / actor.speed;
+    return eta <= CONFIG.exposureSeconds && !actor.visible;
+  });
+  threats.sort((a, b) => {
+    const first = (a.distance - CONFIG.minimumDistance) / a.speed;
+    const second = (b.distance - CONFIG.minimumDistance) / b.speed;
+    return first - second;
+  });
+  const closest = { left: null, right: null, back: null };
+  for (const actor of threats) {
+    const direction = directionFromActor(actor, yaw);
+    if (!closest[direction]) closest[direction] = actor;
+  }
+  for (const [direction, node] of Object.entries(compassMessages)) {
+    const actor = closest[direction];
+    node.classList.toggle("hidden", !actor);
+    if (!actor) continue;
+    const eta = Math.max(0, (actor.distance - CONFIG.minimumDistance) / actor.speed);
+    const arrow = direction === "left" ? "←" : direction === "right" ? "→" : "↶";
+    const label = direction === "left"
+      ? "IZQUIERDA"
+      : direction === "right"
+        ? "DERECHA"
+        : "DETRÁS";
+    node.innerHTML = `<small>${arrow} ${label}</small>${actor.definition.alert}<small>${eta.toFixed(1)} s</small>`;
+  }
+}
+
+function updateReticle() {
+  if (!raycaster || !camera) return;
+  raycaster.setFromCamera(new THREE.Vector2(0, 0), camera);
+  const hitboxes = activeActors.map((actor) => actor.hitbox);
+  const aimed = raycaster.intersectObjects(hitboxes, false);
+  $("aim-reticle").classList.toggle("ready", aimed.length > 0);
+}
+
+function attemptDodgeAt(x, y) {
+  if (!gameState.running || gameState.paused || !THREE) return;
+  const rect = stage.getBoundingClientRect();
+  const pointer = new THREE.Vector2(
+    ((x - rect.left) / rect.width) * 2 - 1,
+    -((y - rect.top) / rect.height) * 2 + 1
+  );
+  raycaster.setFromCamera(pointer, camera);
+  const results = raycaster.intersectObjects(
+    activeActors.map((actor) => actor.hitbox), false
+  );
+  if (!results.length) {
+    updateStatus("NO HAS APUNTADO A NINGÚN ENEMIGO · SIGUE GIRANDO", "warn");
+    playEffect("miss");
+    return;
+  }
+  const actor = activeActors.find((item) => item.id === results[0].object.userData.actorId);
+  registerDodge(actor);
+}
+
+function addScreenEffect(text, color, x, y) {
+  const bounds = stage.getBoundingClientRect();
+  effectEvents.push({
+    text,
+    color,
+    x: Number.isFinite(x) && x !== 0 ? x : bounds.width * 0.5,
+    y: Number.isFinite(y) && y !== 0 ? y : bounds.height * 0.55,
+    lifetime: 0.8,
+  });
+}
+
+function drawEffects(deltaSeconds) {
+  const rect = stage.getBoundingClientRect();
+  effectsContext.clearRect(0, 0, rect.width, rect.height);
+  effectsContext.font = '22px "Permanent Marker", sans-serif';
+  effectsContext.textAlign = "center";
+  effectsContext.lineWidth = 4;
+  for (const effect of effectEvents) {
+    effect.lifetime -= deltaSeconds;
+    effect.y -= 27 * deltaSeconds;
+    effectsContext.globalAlpha = clamp(effect.lifetime / 0.8, 0, 1);
+    effectsContext.strokeStyle = "#111";
+    effectsContext.fillStyle = effect.color;
+    effectsContext.strokeText(effect.text, effect.x, effect.y);
+    effectsContext.fillText(effect.text, effect.x, effect.y);
+  }
+  effectsContext.globalAlpha = 1;
+  effectEvents = effectEvents.filter((effect) => effect.lifetime > 0);
+}
+
+function updateMicrophone() {
+  if (!microphoneAnalyser || !microphoneData) return;
+  microphoneAnalyser.getByteTimeDomainData(microphoneData);
+  let sum = 0;
+  for (const value of microphoneData) {
+    const signal = (value - 128) / 128;
+    sum += signal * signal;
+  }
+  const measurement = Math.sqrt(sum / microphoneData.length);
+  gameState.sound = gameState.sound * CONFIG.soundSmoothing
+    + measurement * (1 - CONFIG.soundSmoothing);
+  const peaked = gameState.sound > CONFIG.microphonePeak;
+  if (peaked && !lastSoundPeak) gameState.soundPeaks++;
+  lastSoundPeak = peaked;
+}
+
+function updateGameStatistics(deltaSeconds) {
+  const people = activeActors.filter((actor) => actor.definition.className === "persona").length;
+  const motos = activeActors.filter((actor) => actor.definition.className === "moto").length;
+  const nearby = activeActors.filter((actor) => actor.distance < 5.7).length;
+  gameState.people = people;
+  gameState.motos = motos;
+  gameState.maxPeople = Math.max(gameState.maxPeople, people);
+  gameState.crowd = nearby >= 4;
+  if (gameState.crowd) gameState.crowdSeconds += deltaSeconds;
+  updateMicrophone();
+  gameState.risk = clamp(
+    0.12 + nearby * 0.09 + motos * 0.055 + (gameState.crowd ? 0.18 : 0)
+      + Math.min(0.18, gameState.sound * 0.9),
+    0.08,
+    1
+  );
+  $("people-count").textContent = people;
+  $("moto-count").textContent = motos;
+  $("crowd-state").textContent = gameState.crowd ? "ALTA" : "NO";
+  $("sound-state").textContent = microphoneAnalyser
+    ? gameState.sound > 0.14 ? "ALTO" : gameState.sound > .05 ? "MEDIO" : "BAJO"
+    : "SIN MIC";
+  $("risk-bar").style.width = `${Math.round(gameState.risk * 100)}%`;
+  $("risk-bar").style.background = gameState.risk > .7
+    ? "#d84232"
+    : gameState.risk > .4
+      ? "#f7c700"
+      : "#6d9c79";
+  $("risk-text").textContent = gameState.risk > .7
+    ? "ALTA"
+    : gameState.risk > .4
+      ? "MEDIA"
+      : "BAJA";
+}
+
+function ensureSoundContext() {
+  if (audioContext) {
+    if (audioContext.state === "suspended") audioContext.resume().catch(() => {});
+    return;
+  }
+  const Type = window.AudioContext || window.webkitAudioContext;
+  if (!Type) return;
+  try { audioContext = new Type(); } catch (error) { console.warn(error); }
+}
+
+function playEffect(kind) {
+  if (!gameState.musicEnabled || !audioContext) return;
+  try {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const now = audioContext.currentTime;
+    oscillator.type = kind === "hit" ? "sawtooth" : "triangle";
+    oscillator.frequency.setValueAtTime(
+      kind === "dodge" ? 660 : kind === "hit" ? 200 : 300,
+      now
+    );
+    oscillator.frequency.exponentialRampToValueAtTime(
+      kind === "dodge" ? 980 : kind === "hit" ? 75 : 150,
+      now + 0.15
+    );
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.17);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + 0.17);
+  } catch (error) { console.warn("Audio:", error); }
+}
+
+async function startMicrophoneOptional(sessionId) {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+  try {
+    const candidateStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    if (sessionId !== currentSession) {
+      candidateStream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    microphoneStream = candidateStream;
+    ensureSoundContext();
+    if (!audioContext) return;
+    microphoneSource = audioContext.createMediaStreamSource(microphoneStream);
+    microphoneAnalyser = audioContext.createAnalyser();
+    microphoneAnalyser.fftSize = 256;
+    microphoneData = new Uint8Array(microphoneAnalyser.fftSize);
+    microphoneSource.connect(microphoneAnalyser);
+    // No se conecta el microfono a altavoces: se analiza, no se reproduce.
+  } catch (error) {
+    microphoneAnalyser = null;
+    updateStatus("CÁMARA ACTIVA · MICRÓFONO OPCIONAL NO DISPONIBLE", "warn");
+  }
+}
+
+function stopStreams() {
+  if (currentStream) currentStream.getTracks().forEach((track) => track.stop());
+  if (microphoneStream) microphoneStream.getTracks().forEach((track) => track.stop());
+  currentStream = null;
+  microphoneStream = null;
+  microphoneSource = null;
+  microphoneAnalyser = null;
+  microphoneData = null;
+  video.pause();
+  video.srcObject = null;
+}
+
+async function startVideoOrFallback(mode, sessionId) {
+  if (mode === "demo") {
+    demoBackdrop.classList.remove("hidden");
+    video.style.display = "none";
+    return;
+  }
+  if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+    throw new Error("La cámara requiere HTTPS y un navegador con getUserMedia.");
+  }
+  currentStream = await navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: { ideal: "environment" } },
+  });
+  if (sessionId !== currentSession) {
+    stopStreams();
+    return;
+  }
+  video.srcObject = currentStream;
+  video.style.display = "block";
+  demoBackdrop.classList.add("hidden");
+  await video.play();
+  // El microfono nunca bloquea el inicio de la camara.
+  startMicrophoneOptional(sessionId);
+}
+
+function stopGameAndCleanup() {
+  currentSession++;
+  gameState.running = false;
+  gameState.paused = false;
+  cancelAnimationFrame(frameRequest);
+  disableSensorListeners();
+  stopStreams();
+  activeActors.slice().forEach(removeActor);
+  $("pause-card").classList.add("hidden");
+  $("tutorial-overlay").classList.add("hidden");
+  if (renderer) renderer.clear();
+  Object.values(compassMessages).forEach((node) => node.classList.add("hidden"));
+}
+
+function displayTutorial() {
+  $("tutorial-overlay").classList.remove("hidden");
+  pauseGame();
+  tutorialHasShown = true;
+}
+
+function closeTutorial() {
+  $("tutorial-overlay").classList.add("hidden");
+  resumeGame();
+}
+
+function pauseGame() {
+  if (!gameState.running || gameState.paused) return;
+  gameState.paused = true;
+  pauseStarted = performance.now();
+  $("pause-btn").textContent = "▶";
+}
+
+function resumeGame() {
+  if (!gameState.running || !gameState.paused) return;
+  elapsedPaused += performance.now() - pauseStarted;
+  gameState.paused = false;
+  lastFrameTime = 0;
+  $("pause-card").classList.add("hidden");
+  $("pause-btn").textContent = "‖";
+}
+
+function togglePause() {
+  if (!gameState.running) return;
+  if (gameState.paused) {
+    resumeGame();
+  } else {
+    pauseGame();
+    $("pause-card").classList.remove("hidden");
+  }
+}
+
+function endGame() {
+  gameState.running = false;
+  cancelAnimationFrame(frameRequest);
+  disableSensorListeners();
+  stopStreams();
+  $("stat-collisions").textContent = gameState.collisions;
+  $("stat-dodges").textContent = gameState.dodges;
+  $("stat-people").textContent = gameState.maxPeople;
+  $("stat-motos").textContent = gameState.totalMotos;
+  $("stat-sound").textContent = gameState.soundPeaks;
+  $("stat-crowd").textContent = `${Math.round(gameState.crowdSeconds)} s`;
+  $("result-message").textContent = gameState.dodges >= gameState.collisions
+    ? `Esquivaste ${gameState.dodges} obstáculos mirando en distintas direcciones. Tuviste que observar el entorno antes de reaccionar, como ocurre en el recorrido cotidiano.`
+    : `El recorrido acumuló ${gameState.collisions} colisiones. En este juego las amenazas pueden aparecer desde cualquier lado, por lo que mantener la atención en una sola dirección no es suficiente.`;
+  changeScreen("result");
+}
+
+function frame(time) {
+  if (!gameState.running) return;
+  frameRequest = requestAnimationFrame(frame);
+  const deltaSeconds = lastFrameTime ? clamp((time - lastFrameTime) / 1000, 0, 0.045) : 0;
+  lastFrameTime = time;
+  updateCameraQuaternion();
+  if (!gameState.paused) {
+    const elapsed = (time - gameState.startedAt - elapsedPaused) / 1000;
+    clockSeconds = elapsed;
+    if (elapsed >= CONFIG.duration) {
+      endGame();
+      return;
+    }
+    const spawnInterval = Math.max(
+      CONFIG.spawnMinimumMilliseconds,
+      CONFIG.spawnBaseMilliseconds - gameState.risk * 650
+    );
+    if (time - lastSpawnTime > spawnInterval) {
+      spawnRandomActor();
+      lastSpawnTime = time;
+    }
+    processActorUpdates(deltaSeconds);
+    updateGameStatistics(deltaSeconds);
+  }
+  updateProjectedActors();
+  displayThreatWarnings(time);
+  updateReticle();
+  drawEffects(gameState.paused ? 0 : deltaSeconds);
+  if (time - lastHudTime > 100) {
+    lastHudTime = time;
+    const remaining = Math.max(0, Math.ceil(CONFIG.duration - clockSeconds));
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    $("game-time").textContent = `${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`;
+    $("route-progress").style.height = `${clamp(clockSeconds / CONFIG.duration * 100, 0, 100)}%`;
+  }
+  renderer.render(scene, camera);
+}
+
+async function launch(mode, orientationPermissionPromise) {
+  const sessionId = ++currentSession;
+  gameState.mode = mode;
+  changeScreen("game");
+  updateStatus("CARGANDO ESCENA ESPACIAL…", "warn");
+  updateOrientationNote("INICIANDO GIROSCOPIO…");
+  try {
+    await loadThree();
+    if (sessionId !== currentSession) return;
+    buildThreeScene();
+    preloadCharacters();
+    const permission = await orientationPermissionPromise;
+    sensorPermissionGranted = Boolean(permission);
+    orientationHasSamples = false;
+    wasCalibrated = false;
+    enableSensorListeners();
+    if (!permission) updateOrientationNote("SENSOR SIN PERMISO: USA ← Y → O ARRASTRA");
+    try {
+      await startVideoOrFallback(mode, sessionId);
+    } catch (cameraError) {
+      if (mode !== "ar") throw cameraError;
+      console.warn("Cámara no disponible; se mantiene la demostración:", cameraError);
+      stopStreams();
+      gameState.mode = "demo";
+      await startVideoOrFallback("demo", sessionId);
+    }
+    if (sessionId !== currentSession) return;
+    resetGameplay();
+    resizeThree();
+    spawnInitialActors();
+    updateStatus(gameState.mode === "demo"
+      ? "DEMOSTRACIÓN 3DoF · GIRA EL CELULAR O USA FLECHAS"
+      : "WEBAR 3DoF · OBSERVA DESDE UN PUNTO FIJO", "ok");
+    gameState.startedAt = performance.now();
+    frameRequest = requestAnimationFrame(frame);
+    if (!tutorialHasShown) displayTutorial();
+  } catch (error) {
+    stopGameAndCleanup();
+    showErrorOnIntro(error);
+  }
+}
+
+// Estos handlers se ejecutan sin await antes de pedir el permiso iOS.
+function onBeginAR() {
+  ensureSoundContext();
+  const orientationPermission = askSensorPermissionImmediately();
+  launch("ar", orientationPermission);
+}
+
+function onBeginDemo() {
+  ensureSoundContext();
+  const orientationPermission = askSensorPermissionImmediately();
+  launch("demo", orientationPermission);
+}
+
+function aimAtCenter() {
+  const rect = stage.getBoundingClientRect();
+  attemptDodgeAt(rect.left + rect.width / 2, rect.top + rect.height / 2);
+}
+
+function manualRotate(deltaYaw, deltaPitch = 0) {
+  manualYaw = wrapAngle(manualYaw + deltaYaw);
+  manualPitch = clamp(manualPitch + deltaPitch, -1.05, 1.05);
+  updateCameraQuaternion();
+}
+
+function bindControls() {
+  $("start-ar").addEventListener("click", onBeginAR);
+  $("start-demo").addEventListener("click", onBeginDemo);
+  $("play-again").addEventListener("click", () => {
+    const mode = gameState.mode;
+    stopGameAndCleanup();
+    ensureSoundContext();
+    const permission = askSensorPermissionImmediately();
+    launch(mode, permission);
+  });
+  $("back-intro").addEventListener("click", () => {
+    stopGameAndCleanup();
+    changeScreen("intro");
+  });
+  $("exit-btn").addEventListener("click", () => {
+    stopGameAndCleanup();
+    changeScreen("intro");
+  });
+  $("left-btn").addEventListener("click", () => manualRotate(-0.24));
+  $("right-btn").addEventListener("click", () => manualRotate(0.24));
+  $("center-btn").addEventListener("click", aimAtCenter);
+  $("recalibrate-btn").addEventListener("click", () => {
+    if (orientationHasSamples) recalibrateOrientation();
+    else {
+      manualYaw = 0;
+      manualPitch = 0;
+      updateStatus("VISTA MANUAL CENTRADA", "ok");
+    }
+  });
+  $("pause-btn").addEventListener("click", togglePause);
+  $("resume-btn").addEventListener("click", resumeGame);
+  $("help-btn").addEventListener("click", () => {
+    if (gameState.running) displayTutorial();
+  });
+  $("close-help").addEventListener("click", closeTutorial);
+  $("sound-btn").addEventListener("click", () => {
+    gameState.musicEnabled = !gameState.musicEnabled;
+    $("sound-btn").textContent = gameState.musicEnabled ? "♪" : "×";
+  });
+  $("dialog-close").addEventListener("click", () => $("permission-dialog").close());
+
+  // Pulsar sobre cualquier personaje: raycast en la malla Three.js.
+  stage.addEventListener("pointerdown", (event) => {
+    if (event.target.closest("button") || !gameState.running || gameState.paused) return;
+    gestureStart = { x: event.clientX, y: event.clientY, time: performance.now() };
+  });
+  stage.addEventListener("pointerup", (event) => {
+    if (!gestureStart || !gameState.running || gameState.paused) return;
+    if (event.target.closest("button")) { gestureStart = null; return; }
+    const differenceX = event.clientX - gestureStart.x;
+    const differenceY = event.clientY - gestureStart.y;
+    if (Math.abs(differenceX) > 23 || Math.abs(differenceY) > 23) {
+      manualRotate(-differenceX * 0.0042, -differenceY * 0.0032);
+    } else {
+      attemptDodgeAt(event.clientX, event.clientY);
+    }
+    gestureStart = null;
+  });
+
+  window.addEventListener("keydown", (event) => {
+    const key = event.key.toLowerCase();
+    if (key === "arrowleft" || key === "a") manualRotate(-0.21);
+    if (key === "arrowright" || key === "d") manualRotate(0.21);
+    if (key === "arrowup" || key === "w") manualRotate(0, 0.12);
+    if (key === "arrowdown" || key === "s") manualRotate(0, -0.12);
+    if (key === " " || key === "enter") { event.preventDefault(); aimAtCenter(); }
+    if (key === "p") togglePause();
+    if (key === "r" && orientationHasSamples) recalibrateOrientation();
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && gameState.running && !gameState.paused) {
+      pauseGame();
+      $("pause-card").classList.remove("hidden");
+    }
+  });
+  window.addEventListener("pagehide", stopGameAndCleanup);
+}
+
+bindControls();
+changeScreen("intro");
+// La portada es HTML/CSS; no importa si la libreria tarda en descargarse.
+
+  </script>
+</body>
+</html>
