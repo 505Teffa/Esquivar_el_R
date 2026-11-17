@@ -1522,7 +1522,7 @@
         </div>
 
         <div class="instruction">
-          GIRA EL CELULAR · TOCA UN ENEMIGO PARA ESQUIVARLO
+          GIRA · TOCA AL ENEMIGO O PRUEBA UN PASO LATERAL SEGURO
         </div>
 
         <div
@@ -1611,7 +1611,7 @@
               </li>
 
               <li>
-                No camines: juega detenido en un lugar seguro. Si no hay sensor, usa las flechas o arrastra para girar la vista.
+                Desde un sitio seguro y despejado, puedes probar un paso lateral corto: el acelerómetro lo interpreta como esquiva experimental. No camines por la entrada mirando la pantalla. Si no hay sensor, usa las flechas o arrastra para girar la vista.
               </li>
             </ol>
 
@@ -1785,9 +1785,17 @@ const CONFIG = Object.freeze({
   initialDistance: 8.8,
   minimumDistance: 1.25,
   dodgeMaximumDistance: 8.7,
-  spawnBaseMilliseconds: 1700,
-  spawnMinimumMilliseconds: 850,
-  spawnLimit: 18,
+  spawnBaseMilliseconds: 3600,
+  spawnMinimumMilliseconds: 2700,
+  spawnLimit: 7,
+  cameraDetectionIntervalMs: 1250,
+  cameraPersonMinimumScore: 0.63,
+  cameraSpawnCooldownMs: 5200,
+  cameraMaximumActiveActors: 2,
+  cameraTrackForgetMs: 8500,
+  sidestepAccelerationThreshold: 2.3,
+  sidestepCooldownMs: 1450,
+  sidestepDodgeDistance: 4.6,
   maximumPixelRatio: 1.8,
   fieldOfView: 66,
   exposureSeconds: 6.5,
@@ -1880,6 +1888,9 @@ const CHARACTER_TYPES = Object.freeze({
 
 const SPRITE_DIRECTORY = "assets/personajes/";
 const THREE_MODULE_URL = "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js";
+const TENSORFLOW_SCRIPT = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
+const COCO_SSD_SCRIPT = "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
+const CAMERA_ENEMY_TYPES = ["enojado", "gordo", "ñoño", "lanegracandela", "valentina"];
 const stage = $("camera-stage");
 const video = $("camera");
 const threeCanvas = $("three-canvas");
@@ -1929,6 +1940,39 @@ let effectEvents = [];
 let lastSoundPeak = false;
 let tutorialHasShown = false;
 let gestureStart = null;
+
+// Deteccion visual local, por demanda; NO se graba ni envia video.
+const perception = {
+  model: null,
+  loadPromise: null,
+  loading: false,
+  ready: false,
+  busy: false,
+  lastInference: 0,
+  lastSpawn: 0,
+  visiblePeople: 0,
+  nextTrackId: 1,
+  tracks: [],
+  boxes: [],
+  error: "",
+};
+
+// WebAR 3DoF no mide posicion en el suelo. Esta opcion interpreta
+// un impulso lateral del acelerometro como gesto experimental de esquiva.
+const lateralMotion = {
+  authorized: false,
+  hasSamples: false,
+  listening: false,
+  lastTrigger: 0,
+  candidateDirection: 0,
+  candidateAt: 0,
+  candidateCount: 0,
+  gravityX: 0,
+  gravityY: 0,
+  gravityZ: 0,
+  gravityReady: false,
+};
+
 const activeActors = [];
 const preloadedSprites = new Map();
 const spriteAvailability = new Map();
@@ -1954,6 +1998,8 @@ const gameState = {
   score: 0,
   risk: 0.25,
   nearestThreat: null,
+  cameraEnemiesGenerated: 0,
+  physicalDodges: 0,
 };
 
 function changeScreen(name) {
@@ -2081,6 +2127,317 @@ function preloadCharacters() {
   });
 }
 
+
+// Cargar las librerias DESPUES de iniciar; la portada no depende de la IA.
+function loadOptionalScript(url, id) {
+  return new Promise((resolve, reject) => {
+    if (document.getElementById(id)) {
+      const node = document.getElementById(id);
+      if (node.dataset.loaded === "1") return resolve();
+      node.addEventListener("load", resolve, { once: true });
+      node.addEventListener("error", () => reject(new Error(url)), { once: true });
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = url;
+    script.id = id;
+    script.async = true;
+    script.addEventListener("load", () => {
+      script.dataset.loaded = "1";
+      resolve();
+    }, { once: true });
+    script.addEventListener("error", () => reject(new Error(url)), { once: true });
+    document.head.appendChild(script);
+  });
+}
+
+async function loadPeopleDetector(sessionId) {
+  if (perception.ready && perception.model) return;
+  if (perception.loadPromise) return perception.loadPromise;
+  perception.loading = true;
+  perception.error = "";
+  perception.loadPromise = (async () => {
+    try {
+      if (!window.tf) await loadOptionalScript(TENSORFLOW_SCRIPT, "esquivar-tfjs");
+      if (!window.cocoSsd) await loadOptionalScript(COCO_SSD_SCRIPT, "esquivar-coco");
+      if (sessionId !== currentSession) return;
+      // Modelo ligero: inferencia aproximadamente 0.8 veces/s para no saturar moviles.
+      const detector = await window.cocoSsd.load({ base: "lite_mobilenet_v2" });
+      if (sessionId !== currentSession) return;
+      perception.model = detector;
+      perception.ready = true;
+      updateStatus("DETECCIÓN DE PERSONAS ACTIVA · GIRA PARA EXPLORAR", "ok");
+    } catch (error) {
+      perception.error = String(error.message || error);
+      console.warn("El juego continua sin deteccion visual:", error);
+      if (sessionId === currentSession) {
+        updateStatus("DETECCIÓN NO DISPONIBLE · JUEGO AUTOMÁTICO ACTIVO", "warn");
+      }
+    } finally {
+      perception.loading = false;
+      perception.loadPromise = null;
+    }
+  })();
+  return perception.loadPromise;
+}
+
+function clearPerceptionSession() {
+  perception.busy = false;
+  perception.lastInference = 0;
+  perception.lastSpawn = 0;
+  perception.visiblePeople = 0;
+  perception.tracks = [];
+  perception.boxes = [];
+  perception.nextTrackId = 1;
+  // Mantener modelo cargado para siguiente partida; no mantener imagenes.
+}
+
+function boxCenter(box) {
+  return { x: box[0] + box[2] / 2, y: box[1] + box[3] / 2 };
+}
+
+function matchTrackedPerson(box, imageWidth, imageHeight, alreadyUsed) {
+  const center = boxCenter(box);
+  let best = null;
+  let bestDistance = Infinity;
+  for (const track of perception.tracks) {
+    if (alreadyUsed.has(track.id)) continue;
+    const oldCenter = boxCenter(track.box);
+    const dx = (center.x - oldCenter.x) / imageWidth;
+    const dy = (center.y - oldCenter.y) / imageHeight;
+    const distance = Math.hypot(dx, dy);
+    if (distance < 0.17 && distance < bestDistance) {
+      bestDistance = distance;
+      best = track;
+    }
+  }
+  return best;
+}
+
+// Convierte el pixel horizontal detectado en una direccion alrededor del jugador.
+// Corrige el recorte producido por object-fit: cover sobre el video.
+function bearingForDetectedBox(box) {
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  const rect = stage.getBoundingClientRect();
+  if (!vw || !vh || !rect.width || !camera) return getCameraYaw();
+  const scale = Math.max(rect.width / vw, rect.height / vh);
+  const realWidth = vw * scale;
+  const cropLeft = (realWidth - rect.width) / 2;
+  const xOnScreen = (box[0] + box[2] / 2) * scale - cropLeft;
+  const ndcX = clamp(2 * xOnScreen / rect.width - 1, -1.25, 1.25);
+  const halfVFov = THREE.MathUtils.degToRad(CONFIG.fieldOfView / 2);
+  const horizontalOffset = Math.atan(ndcX * Math.tan(halfVFov) * camera.aspect);
+  return wrapAngle(getCameraYaw() + horizontalOffset);
+}
+
+function maybeSpawnFromCameraTrack(track, now) {
+  if (track.spawned || track.hits < 2 || !gameState.running || gameState.paused) return;
+  if (now - perception.lastSpawn < CONFIG.cameraSpawnCooldownMs) return;
+  if (activeActors.length >= CONFIG.spawnLimit) return;
+  if (activeActors.filter(a => a.source === "camera").length >= CONFIG.cameraMaximumActiveActors) return;
+  const type = choose(CAMERA_ENEMY_TYPES);
+  const angle = bearingForDetectedBox(track.box);
+  const enemy = spawnActor(type, {
+    angle,
+    distance: randomBetween(7.8, 9.4),
+    source: "camera",
+  });
+  if (!enemy) return;
+  track.spawned = true;
+  perception.lastSpawn = now;
+  gameState.cameraEnemiesGenerated++;
+  updateStatus(`PERSONA DETECTADA → ${enemy.definition.label}`, "warn");
+  addScreenEffect("¡PERSONA REAL → ENEMIGO!", "#f7c700", 0, 0);
+}
+
+function processDetectedPeople(predictions, now) {
+  const vw = video.videoWidth || 1;
+  const vh = video.videoHeight || 1;
+  const persons = predictions
+    .filter(p => p.class === "person" && p.score >= CONFIG.cameraPersonMinimumScore)
+    .slice(0, 10);
+  perception.visiblePeople = persons.length;
+  perception.boxes = persons.map(p => ({ box: p.bbox.slice(), score: p.score }));
+  const used = new Set();
+  for (const person of persons) {
+    let track = matchTrackedPerson(person.bbox, vw, vh, used);
+    if (!track) {
+      track = {
+        id: perception.nextTrackId++,
+        box: person.bbox.slice(),
+        hits: 0,
+        spawned: false,
+        seenAt: now,
+      };
+      perception.tracks.push(track);
+    }
+    track.hits = Math.min(30, track.hits + 1);
+    track.box = person.bbox.slice();
+    track.seenAt = now;
+    used.add(track.id);
+    maybeSpawnFromCameraTrack(track, now);
+  }
+  perception.tracks = perception.tracks.filter(
+    track => now - track.seenAt < CONFIG.cameraTrackForgetMs
+  );
+}
+
+// La inferencia no bloquea requestAnimationFrame ni el giroscopio.
+function maybeDetectPeople(now) {
+  if (gameState.mode !== "ar" || !perception.ready || perception.busy || gameState.paused) return;
+  if (!video.videoWidth || video.readyState < 2) return;
+  if (now - perception.lastInference < CONFIG.cameraDetectionIntervalMs) return;
+  const sessionId = currentSession;
+  perception.lastInference = now;
+  perception.busy = true;
+  Promise.resolve(perception.model.detect(video, 12, CONFIG.cameraPersonMinimumScore))
+    .then(predictions => {
+      if (sessionId === currentSession && gameState.running) {
+        processDetectedPeople(predictions, performance.now());
+      }
+    })
+    .catch(error => {
+      console.warn("Fotograma no procesado:", error);
+      perception.error = String(error.message || error);
+    })
+    .finally(() => { perception.busy = false; });
+}
+
+function drawDetectedPeopleOverlay() {
+  if (gameState.mode !== "ar" || !perception.ready || !perception.boxes.length) return;
+  const rect = stage.getBoundingClientRect();
+  const vw = video.videoWidth || 1;
+  const vh = video.videoHeight || 1;
+  const scale = Math.max(rect.width / vw, rect.height / vh);
+  const left = (rect.width - vw * scale) / 2;
+  const top = (rect.height - vh * scale) / 2;
+  effectsContext.save();
+  effectsContext.lineWidth = 2;
+  effectsContext.strokeStyle = "#f7c700";
+  effectsContext.fillStyle = "rgba(247,199,0,.9)";
+  effectsContext.font = 'bold 14px "Caveat", cursive';
+  for (const detection of perception.boxes) {
+    const [bx, by, bw, bh] = detection.box;
+    const x = left + bx * scale;
+    const y = top + by * scale;
+    const w = bw * scale;
+    const h = bh * scale;
+    effectsContext.setLineDash([7, 5]);
+    effectsContext.strokeRect(x, y, w, h);
+    effectsContext.setLineDash([]);
+    effectsContext.fillText("PERSONA", Math.max(5, x + 3), Math.max(18, y - 5));
+  }
+  effectsContext.restore();
+}
+
+// iOS tambien exige DeviceMotionEvent.requestPermission() al pulsar un boton.
+function askMotionPermissionImmediately() {
+  if (typeof DeviceMotionEvent === "undefined") return Promise.resolve(false);
+  if (typeof DeviceMotionEvent.requestPermission === "function") {
+    try {
+      return DeviceMotionEvent.requestPermission()
+        .then(result => result === "granted")
+        .catch(() => false);
+    } catch (error) { return Promise.resolve(false); }
+  }
+  return Promise.resolve(true);
+}
+
+function handleLateralMove(direction) {
+  if (!gameState.running || gameState.paused || !camera || !THREE) return;
+  const now = performance.now();
+  if (now - lateralMotion.lastTrigger < CONFIG.sidestepCooldownMs) return;
+  lateralMotion.lastTrigger = now;
+  const arrow = direction < 0 ? "←" : "→";
+  const yaw = getCameraYaw();
+  const frontal = activeActors
+    .filter(actor => actor.distance <= CONFIG.sidestepDodgeDistance
+      && Math.abs(wrapAngle(actor.angle - yaw)) <= 0.92)
+    .sort((a, b) => a.distance - b.distance);
+  // Gesto lateral aproximado, no posicion 6DoF verdadera.
+  if (frontal.length) {
+    gameState.physicalDodges++;
+    registerDodge(frontal[0]);
+    addScreenEffect(`PASO LATERAL ${arrow}`, "#b8c8d6", 0, 0);
+  } else {
+    updateStatus(`PASO LATERAL ${arrow} · BUSCA UNA AMENAZA CERCANA`, "ok");
+    addScreenEffect(`PASO ${arrow}`, "#b8c8d6", 0, 0);
+  }
+}
+
+function onDeviceMotion(event) {
+  if (!gameState.running || gameState.paused || !lateralMotion.authorized) return;
+  let x, y, z;
+  if (event.acceleration && Number.isFinite(event.acceleration.x)) {
+    x = event.acceleration.x;
+    y = event.acceleration.y || 0;
+    z = event.acceleration.z || 0;
+  } else if (event.accelerationIncludingGravity) {
+    // Filtro pasa-altos simple si el dispositivo no separa gravedad.
+    const source = event.accelerationIncludingGravity;
+    if (![source.x, source.y, source.z].every(Number.isFinite)) return;
+    if (!lateralMotion.gravityReady) {
+      lateralMotion.gravityX = source.x;
+      lateralMotion.gravityY = source.y;
+      lateralMotion.gravityZ = source.z;
+      lateralMotion.gravityReady = true;
+      return;
+    }
+    const alpha = 0.88;
+    lateralMotion.gravityX = alpha * lateralMotion.gravityX + (1 - alpha) * source.x;
+    lateralMotion.gravityY = alpha * lateralMotion.gravityY + (1 - alpha) * source.y;
+    lateralMotion.gravityZ = alpha * lateralMotion.gravityZ + (1 - alpha) * source.z;
+    x = source.x - lateralMotion.gravityX;
+    y = source.y - lateralMotion.gravityY;
+    z = source.z - lateralMotion.gravityZ;
+  } else return;
+  lateralMotion.hasSamples = true;
+  const angle = Number(window.screen.orientation?.angle ?? window.orientation ?? 0);
+  const radians = angle * Math.PI / 180;
+  const sideways = x * Math.cos(radians) - y * Math.sin(radians);
+  const forward = x * Math.sin(radians) + y * Math.cos(radians);
+  const threshold = CONFIG.sidestepAccelerationThreshold;
+  if (Math.abs(sideways) < threshold || Math.abs(sideways) < Math.abs(forward) * 1.2) {
+    if (performance.now() - lateralMotion.candidateAt > 340) {
+      lateralMotion.candidateCount = 0;
+    }
+    return;
+  }
+  const dir = Math.sign(sideways);
+  const now = performance.now();
+  if (lateralMotion.candidateDirection !== dir || now - lateralMotion.candidateAt > 340) {
+    lateralMotion.candidateDirection = dir;
+    lateralMotion.candidateAt = now;
+    lateralMotion.candidateCount = 1;
+  } else {
+    lateralMotion.candidateCount++;
+  }
+  if (lateralMotion.candidateCount >= 2) {
+    lateralMotion.candidateCount = 0;
+    handleLateralMove(dir);
+  }
+}
+
+function enableLateralMotion(authorized) {
+  lateralMotion.authorized = Boolean(authorized);
+  lateralMotion.candidateCount = 0;
+  lateralMotion.gravityReady = false;
+  if (lateralMotion.authorized && !lateralMotion.listening) {
+    window.addEventListener("devicemotion", onDeviceMotion, true);
+    lateralMotion.listening = true;
+  }
+}
+
+function disableLateralMotion() {
+  if (lateralMotion.listening) {
+    window.removeEventListener("devicemotion", onDeviceMotion, true);
+  }
+  lateralMotion.listening = false;
+  lateralMotion.candidateCount = 0;
+  lateralMotion.authorized = false;
+}
+
 function resetGameplay() {
   gameState.running = true;
   gameState.paused = false;
@@ -2100,6 +2457,9 @@ function resetGameplay() {
   gameState.score = 0;
   gameState.risk = 0.25;
   gameState.nearestThreat = null;
+  gameState.cameraEnemiesGenerated = 0;
+  gameState.physicalDodges = 0;
+  clearPerceptionSession();
   elapsedPaused = 0;
   pauseStarted = 0;
   clockSeconds = 0;
@@ -2197,6 +2557,7 @@ function spawnActor(type, options = {}) {
     lastScreenX: 0,
     lastScreenY: 0,
     visible: false,
+    source: options.source || "auto",
   };
   activeActors.push(actor);
   if (definition.className === "moto") gameState.totalMotos++;
@@ -2221,7 +2582,7 @@ function removeActor(actor) {
 }
 
 function spawnMotorcyclePack(angle) {
-  const length = activeActors.length < CONFIG.spawnLimit - 2 ? 3 : 1;
+  const length = activeActors.length <= CONFIG.spawnLimit - 3 ? 3 : 1;
   for (let i = 0; i < length; i++) {
     spawnActor("motociclista", {
       angle: angle + (i - 1) * 0.15,
@@ -2237,7 +2598,7 @@ function spawnRandomActor() {
   const types = Object.keys(CHARACTER_TYPES);
   const type = choose(types);
   const angle = randomBetween(-Math.PI, Math.PI);
-  if (type === "motociclista" && Math.random() < 0.32) {
+  if (type === "motociclista" && Math.random() < 0.10) {
     spawnMotorcyclePack(angle);
   } else {
     spawnActor(type, { angle });
@@ -2245,10 +2606,9 @@ function spawnRandomActor() {
 }
 
 function spawnInitialActors() {
-  spawnActor("enojado", { angle: 0.04, distance: 8.7 });
-  spawnActor("valentina", { angle: 0.85, distance: 8.4 });
-  spawnActor("ñoño", { angle: -1.05, distance: 8.0 });
-  spawnActor("negraenmoto", { angle: -2.25, distance: 9.2 });
+  // Solo dos obstáculos al inicio, a diferencia de los cuatro anteriores.
+  spawnActor("enojado", { angle: 0.18, distance: 9.2, source: "auto" });
+  spawnActor("valentina", { angle: -1.18, distance: 8.9, source: "auto" });
 }
 
 function updateActorMotion(actor, deltaSeconds) {
@@ -2578,6 +2938,7 @@ function addScreenEffect(text, color, x, y) {
 function drawEffects(deltaSeconds) {
   const rect = stage.getBoundingClientRect();
   effectsContext.clearRect(0, 0, rect.width, rect.height);
+  drawDetectedPeopleOverlay();
   effectsContext.font = '22px "Permanent Marker", sans-serif';
   effectsContext.textAlign = "center";
   effectsContext.lineWidth = 4;
@@ -2614,19 +2975,22 @@ function updateGameStatistics(deltaSeconds) {
   const people = activeActors.filter((actor) => actor.definition.className === "persona").length;
   const motos = activeActors.filter((actor) => actor.definition.className === "moto").length;
   const nearby = activeActors.filter((actor) => actor.distance < 5.7).length;
-  gameState.people = people;
+  const realPeople = gameState.mode === "ar" && perception.ready
+    ? perception.visiblePeople : 0;
+  gameState.people = gameState.mode === "ar" && perception.ready ? realPeople : people;
   gameState.motos = motos;
-  gameState.maxPeople = Math.max(gameState.maxPeople, people);
-  gameState.crowd = nearby >= 4;
+  gameState.maxPeople = Math.max(gameState.maxPeople, gameState.people);
+  gameState.crowd = nearby >= 4 || realPeople >= 4;
   if (gameState.crowd) gameState.crowdSeconds += deltaSeconds;
   updateMicrophone();
   gameState.risk = clamp(
-    0.12 + nearby * 0.09 + motos * 0.055 + (gameState.crowd ? 0.18 : 0)
+    0.12 + nearby * 0.09 + realPeople * 0.035 + motos * 0.055 + (gameState.crowd ? 0.18 : 0)
       + Math.min(0.18, gameState.sound * 0.9),
     0.08,
     1
   );
-  $("people-count").textContent = people;
+  // En AR el numero corresponde a personas detectadas por la camara.
+  $("people-count").textContent = gameState.people;
   $("moto-count").textContent = motos;
   $("crowd-state").textContent = gameState.crowd ? "ALTA" : "NO";
   $("sound-state").textContent = microphoneAnalyser
@@ -2734,8 +3098,9 @@ async function startVideoOrFallback(mode, sessionId) {
   video.style.display = "block";
   demoBackdrop.classList.add("hidden");
   await video.play();
-  // El microfono nunca bloquea el inicio de la camara.
+  // El microfono y la deteccion visual nunca bloquean la camara o el HUD.
   startMicrophoneOptional(sessionId);
+  void loadPeopleDetector(sessionId);
 }
 
 function stopGameAndCleanup() {
@@ -2744,6 +3109,8 @@ function stopGameAndCleanup() {
   gameState.paused = false;
   cancelAnimationFrame(frameRequest);
   disableSensorListeners();
+  disableLateralMotion();
+  clearPerceptionSession();
   stopStreams();
   activeActors.slice().forEach(removeActor);
   $("pause-card").classList.add("hidden");
@@ -2793,6 +3160,8 @@ function endGame() {
   gameState.running = false;
   cancelAnimationFrame(frameRequest);
   disableSensorListeners();
+  disableLateralMotion();
+  clearPerceptionSession();
   stopStreams();
   $("stat-collisions").textContent = gameState.collisions;
   $("stat-dodges").textContent = gameState.dodges;
@@ -2821,12 +3190,13 @@ function frame(time) {
     }
     const spawnInterval = Math.max(
       CONFIG.spawnMinimumMilliseconds,
-      CONFIG.spawnBaseMilliseconds - gameState.risk * 650
+      CONFIG.spawnBaseMilliseconds - gameState.risk * 380
     );
     if (time - lastSpawnTime > spawnInterval) {
       spawnRandomActor();
       lastSpawnTime = time;
     }
+    maybeDetectPeople(time);
     processActorUpdates(deltaSeconds);
     updateGameStatistics(deltaSeconds);
   }
@@ -2845,7 +3215,7 @@ function frame(time) {
   renderer.render(scene, camera);
 }
 
-async function launch(mode, orientationPermissionPromise) {
+async function launch(mode, orientationPermissionPromise, motionPermissionPromise) {
   const sessionId = ++currentSession;
   gameState.mode = mode;
   changeScreen("game");
@@ -2857,7 +3227,9 @@ async function launch(mode, orientationPermissionPromise) {
     buildThreeScene();
     preloadCharacters();
     const permission = await orientationPermissionPromise;
+    const motionPermission = await motionPermissionPromise;
     sensorPermissionGranted = Boolean(permission);
+    enableLateralMotion(motionPermission);
     orientationHasSamples = false;
     wasCalibrated = false;
     enableSensorListeners();
@@ -2891,13 +3263,15 @@ async function launch(mode, orientationPermissionPromise) {
 function onBeginAR() {
   ensureSoundContext();
   const orientationPermission = askSensorPermissionImmediately();
-  launch("ar", orientationPermission);
+  const motionPermission = askMotionPermissionImmediately();
+  launch("ar", orientationPermission, motionPermission);
 }
 
 function onBeginDemo() {
   ensureSoundContext();
   const orientationPermission = askSensorPermissionImmediately();
-  launch("demo", orientationPermission);
+  const motionPermission = askMotionPermissionImmediately();
+  launch("demo", orientationPermission, motionPermission);
 }
 
 function aimAtCenter() {
@@ -2919,7 +3293,8 @@ function bindControls() {
     stopGameAndCleanup();
     ensureSoundContext();
     const permission = askSensorPermissionImmediately();
-    launch(mode, permission);
+    const motionPermission = askMotionPermissionImmediately();
+    launch(mode, permission, motionPermission);
   });
   $("back-intro").addEventListener("click", () => {
     stopGameAndCleanup();
