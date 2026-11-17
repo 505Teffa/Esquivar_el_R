@@ -1809,7 +1809,7 @@ const CONFIG = Object.freeze({
 const CHARACTER_TYPES = Object.freeze({
   enojado: {
     filename: "enojado.gif",
-    label: "ENOJADO",
+    label: "PEATÓN APRESURADO",
     className: "persona",
     speed: 1.72,
     width: 1.55,
@@ -1820,7 +1820,7 @@ const CHARACTER_TYPES = Object.freeze({
   },
   gordo: {
     filename: "gordo.gif",
-    label: "GORDO",
+    label: "PEATÓN EN ZIGZAG",
     className: "persona",
     speed: 0.70,
     width: 2.0,
@@ -1831,7 +1831,7 @@ const CHARACTER_TYPES = Object.freeze({
   },
   ñoño: {
     filename: "ñoño.gif",
-    label: "ÑOÑO",
+    label: "PEATÓN TRANQUILO",
     className: "persona",
     speed: 0.68,
     width: 1.55,
@@ -1842,7 +1842,7 @@ const CHARACTER_TYPES = Object.freeze({
   },
   lanegracandela: {
     filename: "lanegracandela.gif",
-    label: "LA NEGRA CANDELA",
+    label: "PEATÓN VELOZ",
     className: "persona",
     speed: 1.68,
     width: 1.6,
@@ -1853,7 +1853,7 @@ const CHARACTER_TYPES = Object.freeze({
   },
   valentina: {
     filename: "valentina.gif",
-    label: "VALENTINA",
+    label: "PEATÓN CAMBIANTE",
     className: "persona",
     speed: 0.96,
     width: 1.6,
@@ -1864,7 +1864,7 @@ const CHARACTER_TYPES = Object.freeze({
   },
   negraenmoto: {
     filename: "negraenmoto.gif",
-    label: "NEGRA EN MOTO",
+    label: "MOTO IMPREDECIBLE",
     className: "moto",
     speed: 1.38,
     width: 2.65,
@@ -1875,7 +1875,7 @@ const CHARACTER_TYPES = Object.freeze({
   },
   motociclista: {
     filename: "motociclista.gif",
-    label: "MOTOCICLISTA",
+    label: "MOTOCICLISTA RÁPIDO",
     className: "moto",
     speed: 1.86,
     width: 2.65,
@@ -1887,6 +1887,64 @@ const CHARACTER_TYPES = Object.freeze({
 });
 
 const SPRITE_DIRECTORY = "assets/personajes/";
+// Cuatro pistas personales: sube MP3 en assets/audio/ (mismo nivel que personajes/).
+// Puedes sustituir el archivo MP3 por WAV u OGG cambiando el nombre aqui.
+const AUDIO_DIRECTORY = "assets/audio/";
+const AUDIO_CUES = Object.freeze({
+  inicio:  { filename: "inicio.mp3",    volume: 0.65 },
+  hit:     { filename: "choque.mp3",    volume: 0.80 },
+  dodge:   { filename: "esquivar.mp3",  volume: 0.68 },
+  final:   { filename: "final.mp3",     volume: 0.72 },
+});
+const audioPreviews = new Map();
+const soundsPlaying = new Set();
+
+// Precarga ligera: no impide que aparezca la portada y no necesita Three.js.
+function prepareGameAudio() {
+  for (const [cue, setting] of Object.entries(AUDIO_CUES)) {
+    if (audioPreviews.has(cue)) continue;
+    const audio = new Audio(AUDIO_DIRECTORY + setting.filename);
+    audio.preload = "auto";
+    audio.volume = setting.volume;
+    audioPreviews.set(cue, audio);
+  }
+}
+
+// Los sonidos de choque y esquiva pueden superponerse sin cortarse mutuamente.
+// El navegador habilita la reproduccion desde el toque en INICIAR.
+function playGameAudio(cue) {
+  if (!gameState.musicEnabled) return;
+  const setting = AUDIO_CUES[cue];
+  if (!setting) return;
+  prepareGameAudio();
+  const template = audioPreviews.get(cue);
+  const track = template.cloneNode(true);
+  track.volume = setting.volume;
+  track.preload = "auto";
+  soundsPlaying.add(track);
+  const cleanup = () => soundsPlaying.delete(track);
+  track.addEventListener("ended", cleanup, { once: true });
+  track.addEventListener("error", cleanup, { once: true });
+  const attempt = track.play();
+  if (attempt && typeof attempt.catch === "function") {
+    attempt.catch((error) => {
+      cleanup();
+      console.warn(`No se reprodujo ${AUDIO_DIRECTORY}${setting.filename}:`, error);
+      // Conserva los efectos originales si aun no subiste los MP3.
+      if (cue === "hit" || cue === "dodge") playSynthEffect(cue);
+    });
+  }
+}
+
+// Util para salir, reiniciar o silenciar sin dejar audios anteriores sonando.
+function stopGameAudio() {
+  for (const track of soundsPlaying) {
+    track.pause();
+    try { track.currentTime = 0; } catch (_) {}
+  }
+  soundsPlaying.clear();
+}
+
 const THREE_MODULE_URL = "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js";
 const TENSORFLOW_SCRIPT = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js";
 const COCO_SSD_SCRIPT = "https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js";
@@ -2247,7 +2305,7 @@ function maybeSpawnFromCameraTrack(track, now) {
   track.spawned = true;
   perception.lastSpawn = now;
   gameState.cameraEnemiesGenerated++;
-  updateStatus(`PERSONA DETECTADA → ${enemy.definition.label}`, "warn");
+  updateStatus("PERSONA DETECTADA · NUEVO OBSTÁCULO", "warn");
   addScreenEffect("¡PERSONA REAL → ENEMIGO!", "#f7c700", 0, 0);
 }
 
@@ -2652,8 +2710,8 @@ function registerCollision(actor) {
   flash.classList.add("active");
   window.setTimeout(() => flash.classList.remove("active"), 130);
   if (navigator.vibrate) navigator.vibrate([70, 35, 45]);
-  playEffect("hit");
-  updateStatus(`¡COLISIÓN CON ${actor.definition.label}!`, "danger");
+  playGameAudio("hit");
+  updateStatus("¡COLISIÓN! EL CAMINO ESTABA BLOQUEADO", "danger");
   removeActor(actor);
 }
 
@@ -2668,8 +2726,8 @@ function registerDodge(actor) {
   gameState.maxStreak = Math.max(gameState.maxStreak, gameState.streak);
   gameState.score += 25 + Math.min(50, gameState.streak * 5);
   addScreenEffect("¡ESQUIVADO!", "#f7c700", actor.lastScreenX, actor.lastScreenY);
-  playEffect("dodge");
-  updateStatus(`${actor.definition.label} · ESQUIVADO`, "ok");
+  playGameAudio("dodge");
+  updateStatus("¡OBSTÁCULO ESQUIVADO!", "ok");
   removeActor(actor);
 }
 
@@ -3019,7 +3077,7 @@ function ensureSoundContext() {
   try { audioContext = new Type(); } catch (error) { console.warn(error); }
 }
 
-function playEffect(kind) {
+function playSynthEffect(kind) {
   if (!gameState.musicEnabled || !audioContext) return;
   try {
     const oscillator = audioContext.createOscillator();
@@ -3104,6 +3162,7 @@ async function startVideoOrFallback(mode, sessionId) {
 }
 
 function stopGameAndCleanup() {
+  stopGameAudio();
   currentSession++;
   gameState.running = false;
   gameState.paused = false;
@@ -3157,6 +3216,8 @@ function togglePause() {
 }
 
 function endGame() {
+  stopGameAudio();
+  playGameAudio("final");
   gameState.running = false;
   cancelAnimationFrame(frameRequest);
   disableSensorListeners();
@@ -3261,14 +3322,18 @@ async function launch(mode, orientationPermissionPromise, motionPermissionPromis
 
 // Estos handlers se ejecutan sin await antes de pedir el permiso iOS.
 function onBeginAR() {
+  stopGameAudio();
   ensureSoundContext();
+  playGameAudio("inicio");
   const orientationPermission = askSensorPermissionImmediately();
   const motionPermission = askMotionPermissionImmediately();
   launch("ar", orientationPermission, motionPermission);
 }
 
 function onBeginDemo() {
+  stopGameAudio();
   ensureSoundContext();
+  playGameAudio("inicio");
   const orientationPermission = askSensorPermissionImmediately();
   const motionPermission = askMotionPermissionImmediately();
   launch("demo", orientationPermission, motionPermission);
@@ -3292,6 +3357,7 @@ function bindControls() {
     const mode = gameState.mode;
     stopGameAndCleanup();
     ensureSoundContext();
+    playGameAudio("inicio");
     const permission = askSensorPermissionImmediately();
     const motionPermission = askMotionPermissionImmediately();
     launch(mode, permission, motionPermission);
@@ -3323,7 +3389,12 @@ function bindControls() {
   $("close-help").addEventListener("click", closeTutorial);
   $("sound-btn").addEventListener("click", () => {
     gameState.musicEnabled = !gameState.musicEnabled;
+    if (!gameState.musicEnabled) stopGameAudio();
     $("sound-btn").textContent = gameState.musicEnabled ? "♪" : "×";
+    $("sound-btn").setAttribute(
+      "aria-label",
+      gameState.musicEnabled ? "Silenciar sonidos del juego" : "Activar sonidos del juego"
+    );
   });
   $("dialog-close").addEventListener("click", () => $("permission-dialog").close());
 
@@ -3365,6 +3436,7 @@ function bindControls() {
   window.addEventListener("pagehide", stopGameAndCleanup);
 }
 
+prepareGameAudio();
 bindControls();
 changeScreen("intro");
 // La portada es HTML/CSS; no importa si la libreria tarda en descargarse.
