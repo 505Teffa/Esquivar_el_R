@@ -1163,6 +1163,110 @@
 #fx-canvas {position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
 @media(max-width:760px){.threat{max-width:125px;font-size:.91rem;padding:6px}.threat small{font-size:.58rem}.threat-left,.threat-right{top:48%}#orientation-note{top:218px;font-size:.88rem}.instruction{max-width:calc(100% - 20px);text-align:center;white-space:normal;font-size:.85rem;}.hud-top {grid-template-columns:112px minmax(0,1fr) auto;gap:5px}.mini-actions{gap:3px}.mini-hud-btn{min-width:32px;padding:4px;font-size:.75rem}}
 
+
+/* Contador público de visitas: añadido exclusivamente a la portada. */
+.intro-visit-counter {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 100%;
+  margin-top: 20px;
+  padding: 9px 15px;
+  color: var(--ink);
+  background: rgba(247, 241, 229, .88);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 5px 0 rgba(0, 0, 0, .14);
+  transform: rotate(-.7deg);
+}
+.intro-visit-counter__label {
+  font: 700 1.22rem/1.1 var(--hand);
+}
+.intro-visit-counter__number {
+  font: 1.1rem/1.2 var(--marker);
+  color: var(--ink);
+  padding: 1px 7px;
+  background: var(--yellow);
+  border: 1px solid var(--ink);
+  min-width: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* Tutorial visible en portada. No modifica el HUD ni el juego. */
+.intro-play-tutorial {
+  position: relative;
+  margin-top: 28px;
+  padding: clamp(18px, 3vw, 28px);
+  background: rgba(247, 241, 229, .94);
+  border: 3px solid var(--ink);
+  box-shadow: 7px 8px 0 rgba(21, 21, 21, .16);
+  transform: rotate(-.25deg);
+}
+.intro-play-tutorial::before {
+  content: "";
+  position: absolute;
+  inset: 4px -5px -4px 5px;
+  border: 1px solid rgba(21, 21, 21, .40);
+  pointer-events: none;
+  transform: rotate(.2deg);
+}
+.intro-play-tutorial__title {
+  margin: 0 0 18px;
+  font: clamp(1.85rem, 3.6vw, 2.9rem)/1.04 var(--marker);
+  letter-spacing: -.035em;
+}
+.intro-play-tutorial__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.intro-play-tutorial__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 2px solid var(--ink);
+  background: rgba(255, 255, 255, .6);
+  transform: rotate(var(--step-tilt, 0deg));
+}
+.intro-play-tutorial__number {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border: 2px solid var(--ink);
+  border-radius: 48% 52% 45% 55%;
+  background: var(--yellow);
+  font: 1.15rem/1 var(--marker);
+}
+.intro-play-tutorial__step p {
+  margin: 0;
+  font: 700 clamp(1.4rem, 2.1vw, 1.85rem)/1.08 var(--hand);
+}
+.intro-play-tutorial__step b {
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--yellow);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+.intro-play-tutorial__warning {
+  margin: 17px 0 0;
+  padding: 12px 15px;
+  border-left: 8px solid var(--red);
+  background: rgba(247, 199, 0, .19);
+  font: 700 clamp(1.35rem, 2vw, 1.7rem)/1.11 var(--hand);
+}
+@media (max-width: 760px) {
+  .intro-play-tutorial { margin-top: 24px; }
+  .intro-play-tutorial__grid { grid-template-columns: 1fr; }
+  .intro-play-tutorial__step p { font-size: 1.55rem; }
+  .intro-play-tutorial__title { font-size: 2rem; }
+}
+
   </style>
 </head>
 
@@ -1184,10 +1288,6 @@
       <div class="intro-wrap">
         <div class="title-zone">
           <header>
-            <span class="eyebrow">
-              intervención digital situada · UPTC · versión boceto expandida
-            </span>
-
             <h1
               id="project-title"
               class="main-title"
@@ -1229,6 +1329,35 @@
             </p>
           </article>
         </div>
+
+
+        <!-- Tutorial grande de la portada; únicamente instrucciones de juego. -->
+        <section class="intro-play-tutorial" aria-labelledby="intro-play-tutorial-title">
+          <h2 id="intro-play-tutorial-title" class="intro-play-tutorial__title">
+            ¿CÓMO JUGAR? ¡LEE ESTO ANTES DE EMPEZAR!
+          </h2>
+          <div class="intro-play-tutorial__grid">
+            <div class="intro-play-tutorial__step" style="--step-tilt:-.6deg">
+              <span class="intro-play-tutorial__number" aria-hidden="true">1</span>
+              <p><b>Activa la cámara</b> y acepta los permisos del celular. También puedes probar el juego sin cámara.</p>
+            </div>
+            <div class="intro-play-tutorial__step" style="--step-tilt:.5deg">
+              <span class="intro-play-tutorial__number" aria-hidden="true">2</span>
+              <p><b>Gira el celular</b> para buscar a los personajes. ¡Pueden aparecer a tu izquierda, derecha o detrás! Sigue los avisos.</p>
+            </div>
+            <div class="intro-play-tutorial__step" style="--step-tilt:.4deg">
+              <span class="intro-play-tutorial__number" aria-hidden="true">3</span>
+              <p><b>Esquiva tocando al personaje</b> cuando se acerque, o ponlo en la mira central y pulsa el botón del medio.</p>
+            </div>
+            <div class="intro-play-tutorial__step" style="--step-tilt:-.5deg">
+              <span class="intro-play-tutorial__number" aria-hidden="true">4</span>
+              <p><b>Evita las colisiones.</b> Si un personaje llega hasta ti antes de esquivarlo, cuenta como choque. ¡Al terminar verás tus resultados!</p>
+            </div>
+          </div>
+          <p class="intro-play-tutorial__warning">
+            ¡ATENCIÓN! Juega detenido en un lugar seguro. El paso lateral con acelerómetro es opcional y experimental; pruébalo solo en un espacio despejado. No camines por la entrada mirando la pantalla. En computador, usa las flechas o arrastra para girar la vista.
+          </p>
+        </section>
 
         <div class="intro-grid">
           <section
@@ -1344,6 +1473,12 @@
               >
                 PROBAR SIN CÁMARA
               </button>
+            </div>
+
+
+            <div class="intro-visit-counter" aria-label="Contador de visitas a la página">
+              <span class="intro-visit-counter__label">VISITAS A LA PÁGINA</span>
+              <strong id="intro-visit-count" class="intro-visit-counter__number" aria-live="polite">—</strong>
             </div>
 
             <p class="source-note">
@@ -3369,6 +3504,45 @@ bindControls();
 changeScreen("intro");
 // La portada es HTML/CSS; no importa si la libreria tarda en descargarse.
 
+  </script>
+
+  <!-- Contador independiente: no modifica el JavaScript de WebAR, los GIF ni los audios. -->
+  <script>
+  (function () {
+    "use strict";
+    const counterElement = document.getElementById("intro-visit-count");
+    if (!counterElement) return;
+
+    // Clave fija del proyecto. No cambiarla: hacerlo reinicia el conteo mostrado.
+    const counterKey = "esquivar_el_r_uptc_tunja_visitas_2026_6f3c8a91";
+    const counterURL = "https://countapi.mileshilliard.com/api/v1/hit/" + counterKey;
+
+    // Evitar sumar pruebas locales; contar las cargas de la web publicada.
+    if (location.protocol === "file:" ||
+        location.hostname === "localhost" ||
+        location.hostname === "127.0.0.1") {
+      counterElement.title = "El contador se activa en la página publicada";
+      return;
+    }
+
+    fetch(counterURL, { method: "GET", cache: "no-store" })
+      .then(function (response) {
+        if (!response.ok) throw new Error("Servicio de contador no disponible");
+        return response.json();
+      })
+      .then(function (data) {
+        const visits = Number(data.value);
+        if (!Number.isFinite(visits) || visits < 0) {
+          throw new Error("Respuesta inválida del contador");
+        }
+        counterElement.textContent = new Intl.NumberFormat("es-CO").format(visits);
+        counterElement.title = "Número de cargas de la página desde que se instaló el contador";
+      })
+      .catch(function () {
+        counterElement.textContent = "—";
+        counterElement.title = "No se pudo consultar el contador en este momento";
+      });
+  }());
   </script>
 </body>
 </html>
