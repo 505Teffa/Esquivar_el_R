@@ -2653,7 +2653,7 @@ function registerCollision(actor) {
   window.setTimeout(() => flash.classList.remove("active"), 130);
   if (navigator.vibrate) navigator.vibrate([70, 35, 45]);
   playEffect("hit");
-  updateStatus(`¡COLISIÓN CON ${actor.definition.label}!`, "danger");
+  updateStatus("¡COLISIÓN CON ESTUDIANTE!", "danger");
   removeActor(actor);
 }
 
@@ -2669,7 +2669,7 @@ function registerDodge(actor) {
   gameState.score += 25 + Math.min(50, gameState.streak * 5);
   addScreenEffect("¡ESQUIVADO!", "#f7c700", actor.lastScreenX, actor.lastScreenY);
   playEffect("dodge");
-  updateStatus(`${actor.definition.label} · ESQUIVADO`, "ok");
+  updateStatus("¡ESQUIVAR ESTUDIANTE!", "ok");
   removeActor(actor);
 }
 
